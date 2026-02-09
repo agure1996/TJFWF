@@ -222,7 +222,9 @@ export default function Products() {
 
       {/* ---------- Variants Section (ONLY when product selected) ---------- */}
       {expandedProductId !== null && currentProductId !== null && (
-        <div className="mt-4 bg-slate-50 rounded-xl p-4 space-y-4">
+        <div
+  className="mt-4 rounded-xl p-4 space-y-4 bg-slate-100/60 border border-slate-300/60
+    shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
           <div className="flex  items-center justify-between">
             <h3 className="text-sm font-semibold">Variants</h3>
             <Button
