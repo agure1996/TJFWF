@@ -7,7 +7,7 @@ import type { ProductVariantDTO, RequestProductVariantDTO } from "@/api/types";
 interface VariantFormProps {
   variant?: ProductVariantDTO | null;
   productId?: number | null;
-  productName?: string; //optional, used for display purposes
+  productName?: string; // optional, for SKU preview
   onSubmit: (data: RequestProductVariantDTO) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -33,14 +33,15 @@ export default function VariantForm({
     salePrice: "",
   });
 
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     if (variant) {
       setForm({
         color: variant.color ?? "",
-        size: typeof variant.size === "number" ? variant.size : "",
-        quantity: typeof variant.quantity === "number" ? variant.quantity : "",
-        salePrice:
-          typeof variant.salePrice === "number" ? variant.salePrice : "",
+        size: variant.size ?? "",
+        quantity: variant.quantity ?? "",
+        salePrice: variant.salePrice ?? "",
       });
     }
   }, [variant]);
@@ -52,7 +53,6 @@ export default function VariantForm({
           .toUpperCase()}-${form.size}`
       : "";
 
-  // Generic handler for number inputs
   const handleNumberChange = (
     field: "size" | "quantity" | "salePrice",
     value: string,
@@ -63,16 +63,33 @@ export default function VariantForm({
     }));
   };
 
+  const validate = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.color.trim()) newErrors.color = "Color is required";
+    if (form.size === "" || form.size <= 0)
+      newErrors.size = "Size must be greater than 0";
+    if (form.quantity === "" || form.quantity < 0)
+      newErrors.quantity = "Quantity must be 0 or more";
+    if (form.salePrice === "" || form.salePrice <= 0)
+      newErrors.salePrice = "Sale price must be greater than 0";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!productId) return;
 
-    // Prepare payload for backend
+    if (!validate()) return;
+
     const payload: RequestProductVariantDTO = {
-      color: form.color,
-      size: typeof form.size === "number" ? form.size : 0,
-      quantity: typeof form.quantity === "number" ? form.quantity : 0,
-      salePrice: typeof form.salePrice === "number" ? form.salePrice : 0,
+      productId,
+      color: form.color.trim(),
+      size: Number(form.size),
+      quantity: Number(form.quantity),
+      salePrice: Number(form.salePrice),
     };
 
     onSubmit(payload);
@@ -80,7 +97,7 @@ export default function VariantForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="color">Color</Label>
         <Input
           id="color"
@@ -89,9 +106,10 @@ export default function VariantForm({
           placeholder="e.g. Black"
           required
         />
+        {errors.color && <p className="text-xs text-red-500">{errors.color}</p>}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="size">Size</Label>
         <Input
           id="size"
@@ -101,7 +119,20 @@ export default function VariantForm({
           placeholder="e.g. 42"
           required
         />
+        {errors.size && <p className="text-xs text-red-500">{errors.size}</p>}
       </div>
+
+      {variant?.sku && (
+        <div className="space-y-1">
+          <Label>SKU</Label>
+          <Input
+            value={variant.sku}
+            readOnly
+            disabled
+            className="font-mono bg-slate-100 text-slate-600"
+          />
+        </div>
+      )}
 
       {skuPreview && (
         <div className="space-y-1">
@@ -112,7 +143,7 @@ export default function VariantForm({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="quantity">Quantity</Label>
         <Input
           id="quantity"
@@ -122,9 +153,12 @@ export default function VariantForm({
           placeholder="e.g. 20"
           required
         />
+        {errors.quantity && (
+          <p className="text-xs text-red-500">{errors.quantity}</p>
+        )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="salePrice">Sale Price</Label>
         <Input
           id="salePrice"
@@ -134,6 +168,9 @@ export default function VariantForm({
           placeholder="e.g. 29"
           required
         />
+        {errors.salePrice && (
+          <p className="text-xs text-red-500">{errors.salePrice}</p>
+        )}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

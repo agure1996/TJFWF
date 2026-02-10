@@ -8,14 +8,14 @@ export interface ApiResponse<T> {
 export interface ProductDTO {
   productId: number;
   productName: string;
-  productType: string;
+  productType: ProductType;
   productDescription?: string | null;
   supplierId?: number | null;
 }
 
 export interface RequestProductDTO {
   productName: string;
-  productType: string;
+  productType: ProductType;
   productDescription?: string | null;
   supplierId?: number | null;
 }
@@ -38,8 +38,11 @@ export interface RequestProductVariantDTO {
   quantity: number;
   salePrice: number;
 }
+export type CreateProductVariantDTO = Omit<RequestProductVariantDTO, "productId">;
+export const PRODUCT_TYPES = ["ABAYA", "HIJAB", "DRESS", "JILBAB", "KHIMAR", "THOWB"] as const;
+export type ProductType = typeof PRODUCT_TYPES[number];
 
-
+ 
 // Purchases (minimal shape)
 export interface PurchaseDTO {
   id: number;

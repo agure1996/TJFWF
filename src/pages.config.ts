@@ -1,4 +1,3 @@
-
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Suppliers from './pages/Suppliers';
@@ -8,19 +7,26 @@ import Analytics from './pages/Analytics';
 import Expenses from './pages/Expenses';
 import __Layout from './Layout.js';
 
-
+// Explicitly type the Pages object
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Products": Products,
-    "Suppliers": Suppliers,
-    "Purchases": Purchases,
-    "Sales": Sales,
-    "Analytics": Analytics,
-    "Expenses": Expenses,
-}
+  Dashboard,
+  Products,
+  Suppliers,
+  Purchases,
+  Sales,
+  Analytics,
+  Expenses,
+} as const;
 
-export const pagesConfig = {
-    mainPage: "Dashboard",
-    Pages: PAGES,
-    Layout: __Layout,
+// Derive a type for the keys
+export type PageKey = keyof typeof PAGES;
+
+export const pagesConfig: {
+  mainPage: PageKey;
+  Pages: typeof PAGES;
+  Layout: typeof __Layout;
+} = {
+  mainPage: "Dashboard",
+  Pages: PAGES,
+  Layout: __Layout,
 };

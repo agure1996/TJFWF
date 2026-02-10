@@ -3,10 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ProductDTO, RequestProductDTO, SupplierDTO } from "@/api/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type {
+  ProductDTO,
+  ProductType,
+  RequestProductDTO,
+  SupplierDTO,
+} from "@/api/types";
 
-const PRODUCT_TYPES = ["ABAYA", "HIJAB", "DRESS", "JILBAB", "KHIMAR", "THOWB"] as const;
+const PRODUCT_TYPES = [
+  "ABAYA",
+  "HIJAB",
+  "DRESS",
+  "JILBAB",
+  "KHIMAR",
+  "THOWB",
+] as const;
 
 interface ProductFormProps {
   product: ProductDTO | null;
@@ -23,16 +41,15 @@ export default function ProductForm({
   onCancel,
   isLoading = false,
 }: Readonly<ProductFormProps>) {
-
   // supplierId is now string | undefined
   const [form, setForm] = useState<{
     productName: string;
-    productType: string;
+    productType: ProductType;
     productDescription: string;
     supplierId?: string;
   }>({
     productName: "",
-    productType: "",
+    productType: PRODUCT_TYPES[0], // Default to first product type
     productDescription: "",
     supplierId: undefined,
   });
@@ -41,9 +58,12 @@ export default function ProductForm({
     if (product) {
       setForm({
         productName: product.productName || "",
-        productType: product.productType || "",
+        productType: product.productType,
         productDescription: product.productDescription || "",
-        supplierId: product.supplierId === undefined ? undefined : String(product.supplierId),
+        supplierId:
+          product.supplierId === undefined
+            ? undefined
+            : String(product.supplierId),
       });
     }
   }, [product]);
@@ -76,16 +96,18 @@ export default function ProductForm({
         <Label htmlFor="productType">Product Type</Label>
         <Select
           value={form.productType}
-          onValueChange={(val) => setForm({ ...form, productType: val })}
-          required
+          onValueChange={(value) =>
+            setForm((prev) => ({ ...prev, productType: value as ProductType }))
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder="Select product type" />
           </SelectTrigger>
+
           <SelectContent>
-            {PRODUCT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t.charAt(0) + t.slice(1).toLowerCase()}
+            {PRODUCT_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0) + type.slice(1).toLowerCase()}
               </SelectItem>
             ))}
           </SelectContent>
@@ -97,7 +119,9 @@ export default function ProductForm({
         <Textarea
           id="productDescription"
           value={form.productDescription}
-          onChange={(e) => setForm({ ...form, productDescription: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, productDescription: e.target.value })
+          }
           placeholder="Optional description..."
           rows={3}
         />
@@ -107,14 +131,19 @@ export default function ProductForm({
         <Label htmlFor="supplier">Supplier (Optional)</Label>
         <Select
           value={form.supplierId} // <-- now always string | undefined
-          onValueChange={(val) => setForm({ ...form, supplierId: val || undefined })} // undefined instead of null
+          onValueChange={(val) =>
+            setForm({ ...form, supplierId: val || undefined })
+          } // undefined instead of null
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a supplier" />
           </SelectTrigger>
           <SelectContent>
             {suppliers.map((supplier) => (
-              <SelectItem key={supplier.supplierId} value={String(supplier.supplierId)}>
+              <SelectItem
+                key={supplier.supplierId}
+                value={String(supplier.supplierId)}
+              >
                 {supplier.supplierName}
               </SelectItem>
             ))}
@@ -126,7 +155,11 @@ export default function ProductForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-indigo-600 hover:bg-indigo-700"
+        >
           {product ? "Update" : "Create"} Product
         </Button>
       </div>
