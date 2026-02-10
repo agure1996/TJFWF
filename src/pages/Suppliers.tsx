@@ -9,6 +9,7 @@ import PageHeader from "../components/shared/PageHeader";
 import EmptyState from "../components/shared/EmptyState";
 import DataTable from "../components/shared/DataTable";
 import SupplierForm from "../components/suppliers/SupplierForm";
+import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
 
 export default function Suppliers() {
   const queryClient = useQueryClient();
@@ -28,6 +29,7 @@ export default function Suppliers() {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       setShowForm(false);
       setEditing(null);
+      toastCreate("Supplier created successfully");
     },
   });
 
@@ -38,18 +40,21 @@ export default function Suppliers() {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       setShowForm(false);
       setEditing(null);
+      toastUpdate("Supplier updated successfully");
     },
   });
 
   const deleteSupplier = useMutation({
     mutationFn: (id: number) => supplierService.remove(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      toastDelete("Supplier deleted!");
+    },
   });
 
   const handleSubmit = (data: SupplierRequest) => {
     if (editing) {
-updateSupplier.mutate({ id: editing.supplierId, data });
+      updateSupplier.mutate({ id: editing.supplierId, data });
     } else {
       createSupplier.mutate(data);
     }
