@@ -1,10 +1,16 @@
-// API DTOs and response types shared by frontend services
+// src/api/types/index.ts
+
+// --------------------
+// Generic API response
+// --------------------
 export interface ApiResponse<T> {
   message: string;
   data: T;
 }
 
+// --------------------
 // Products
+// --------------------
 export interface ProductDTO {
   productId: number;
   productName: string;
@@ -20,7 +26,9 @@ export interface RequestProductDTO {
   supplierId?: number | null;
 }
 
+// --------------------
 // Product Variants
+// --------------------
 export interface ProductVariantDTO {
   productVariantId: number;
   productId?: number;
@@ -38,33 +46,81 @@ export interface RequestProductVariantDTO {
   quantity: number;
   salePrice: number;
 }
+
 export type CreateProductVariantDTO = Omit<RequestProductVariantDTO, "productId">;
+
 export const PRODUCT_TYPES = ["ABAYA", "HIJAB", "DRESS", "JILBAB", "KHIMAR", "THOWB"] as const;
 export type ProductType = typeof PRODUCT_TYPES[number];
 
- 
-// Purchases (minimal shape)
+// --------------------
+// Purchases
+// --------------------
 export interface PurchaseDTO {
+  id: number;                 // was purchaseId
+  supplier?: SupplierDTO;
+  purchaseType: "SINGLE" | "BATCH";
+  purchaseDate?: string;
+  items: PurchaseItemDTO[];
+  totalAmount?: number;
+}
+
+export interface PurchaseRowDTO {
   id: number;
-  supplierId?: number;
-  total?: number;
+  supplier?: SupplierDTO;
+  supplierName: string;
+  purchaseType: "SINGLE" | "BATCH";
+  items: PurchaseItemDTO[];
+  totalCost: number;
   purchaseDate?: string;
 }
 
-export interface RequestPurchaseDTO {
-  supplierId?: number;
-  total: number;
-  purchaseDate: string;
+export interface PurchaseItemDTO {
+  productVariant: ProductVariantDTO;
+  quantity: number;
+  costPrice: number;
 }
 
-// Sales (minimal shape)
+// Backend request DTO
+// optional, align backend requests
+export interface RequestPurchaseDTO {
+  supplierId?: number;
+  purchaseType?: "SINGLE" | "BATCH";
+  purchaseDate: string;
+  items?: {
+    productVariantId: number;
+    quantity: number;
+    costPrice: number;
+  }[];
+}
+
+// --------------------
+// Frontend-only request shape (matches backend)
+// --------------------
+export interface PurchaseItemRequest {
+  variantId: number;   // maps directly from form productVariantId
+  quantity: number;
+  unitCost: number;    // maps directly from form costPrice
+}
+
+export interface CreatePurchaseRequest {
+  supplierId: number;
+  purchaseType: "SINGLE" | "BATCH";
+  purchaseDate: string;       // ISO string
+  items: PurchaseItemRequest[];
+}
+
+// --------------------
+// Sales
+// --------------------
 export interface SaleDTO {
   id: number;
   total?: number;
   saleDate?: string;
 }
 
+// --------------------
 // Suppliers
+// --------------------
 export type SupplierDTO = {
   supplierId: number;
   supplierName: string;
@@ -72,16 +128,15 @@ export type SupplierDTO = {
   notes?: string;
 };
 
-
-
-
 export type RequestSupplierDTO = {
   supplierName: string;
   supplierContactInfo: string;
   notes?: string;
 };
 
+// --------------------
 // Expenses
+// --------------------
 export interface ExpenseDTO {
   id: number;
   expenseName: string;
