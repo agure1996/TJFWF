@@ -56,7 +56,7 @@ export type ProductType = typeof PRODUCT_TYPES[number];
 // Purchases
 // --------------------
 export interface PurchaseDTO {
-  id: number;                 // was purchaseId
+  purchaseId: number;                 // was purchaseId
   supplier?: SupplierDTO;
   purchaseType: "SINGLE" | "BATCH";
   purchaseDate?: string;

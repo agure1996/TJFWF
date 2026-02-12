@@ -131,17 +131,17 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {purchases.slice(0, 5).map((purchase) => (
-                <div key={purchase.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80">
+                <div key={purchase.purchaseId} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80">
                   <div>
                     <p className="text-sm font-medium text-slate-700">
-                      Purchase #{purchase.id}
+                      Purchase #{purchase.purchaseId}
                     </p>
                     <p className="text-xs text-slate-400">
                       {purchase.purchaseDate ? format(new Date(purchase.purchaseDate), "MMM d, yyyy") : "—"}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-slate-900">
-                    £{(purchase.total || 0).toFixed(2)}
+                    £{(purchase.totalAmount || 0).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -161,9 +161,9 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-amber-800 mb-3">Low Stock Alert</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {variants.filter(v => (v.quantity ?? 0) <= 5).map(v => (
-              <div key={v.variantId} className="bg-white rounded-xl p-3 border border-amber-100">
+              <div key={v.productVariantId} className="bg-white rounded-xl p-3 border border-amber-100">
                 <p className="text-sm font-medium text-slate-700">{v.sku}</p>
-                <p className="text-xs text-slate-500">{v.color} — Size {v.size}</p>
+                <p className="text-xs text-slate-500">{v.color} - Size {v.size}</p>
                 <p className="text-sm font-bold text-amber-600 mt-1">{v.quantity} left</p>
               </div>
             ))}

@@ -5,20 +5,24 @@ import { variantService } from "@/api/services/variantService";
 import { supplierService } from "@/api/services/supplierService";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
-import DataTable from "../components/shared/DataTable";
 import ProductForm from "../components/products/ProductForm";
 import VariantForm from "../components/products/VariantForm";
-import VariantCard from "../components/products/VariantCard";
-import { Badge } from "@/components/ui/badge";
-import { PRODUCT_TYPE_BADGES, PRODUCT_TYPE_LABELS } from "@/constants/productType";
-import type { RequestProductVariantDTO, CreateProductVariantDTO, ProductDTO, ProductVariantDTO, RequestProductDTO } from "@/api/types";
+import ProductsTable from "../components/shared/ProductsTable";
+import type {
+  RequestProductVariantDTO,
+  CreateProductVariantDTO,
+  ProductDTO,
+  ProductVariantDTO,
+  RequestProductDTO,
+  SupplierDTO,
+} from "@/api/types";
 import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
 
 export default function Products() {
   const queryClient = useQueryClient();
 
+  // -------------------- State --------------------
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductDTO | null>(null);
   const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
@@ -27,23 +31,23 @@ export default function Products() {
   const [editingVariant, setEditingVariant] = useState<ProductVariantDTO | null>(null);
 
   // -------------------- Queries --------------------
-  const { data: products = [], isLoading } = useQuery<ProductDTO[]>({
+  const { data: products = [], isLoading: loadingProducts } = useQuery<ProductDTO[]>({
     queryKey: ["products"],
     queryFn: () => productService.list().then((r) => r.data.data),
   });
 
-  const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: () => supplierService.list().then((r) => r.data.data),
-  });
-
-  const { data: variants = [], isLoading: variantsLoading } = useQuery<ProductVariantDTO[]>({
+  const { data: variants = [], isLoading: loadingVariants } = useQuery<ProductVariantDTO[]>({
     queryKey: ["productVariants", currentProductId],
     queryFn: () =>
       currentProductId
         ? variantService.listByProduct(currentProductId).then((r) => r.data.data)
         : Promise.resolve([]),
     enabled: currentProductId !== null,
+  });
+
+  const { data: suppliers = [] } = useQuery<SupplierDTO[]>({
+    queryKey: ["suppliers"],
+    queryFn: () => supplierService.list().then((r) => r.data.data),
   });
 
   // -------------------- Mutations --------------------
@@ -135,64 +139,31 @@ export default function Products() {
     if (editingVariant?.productVariantId) {
       updateVariant.mutate({ variantId: editingVariant.productVariantId, data: payload });
     } else {
-      const createPayload: CreateProductVariantDTO = {
-        color: data.color,
-        size: Number(data.size),
-        quantity: Number(data.quantity),
-        salePrice: Number(data.salePrice),
-      };
-      createVariant.mutate({ productId: currentProductId, data: createPayload });
+      createVariant.mutate({
+        productId: currentProductId,
+        data: {
+          color: data.color,
+          size: Number(data.size),
+          quantity: Number(data.quantity),
+          salePrice: Number(data.salePrice),
+        },
+      });
     }
 
     setShowVariantForm(false);
     setEditingVariant(null);
   };
 
-  // -------------------- Table Columns --------------------
-  const columns = [
-    {
-      key: "productName",
-      label: "Product Name",
-      render: (row: ProductDTO) => row.productName,
-    },
-    {
-      key: "productType",
-      label: "Type",
-      render: (row: ProductDTO) => {
-        const typeKey = row.productType;
-        return <Badge className={PRODUCT_TYPE_BADGES[typeKey]}>{PRODUCT_TYPE_LABELS[typeKey]}</Badge>;
-      },
-    },
-    {
-      key: "actions",
-      label: "",
-      render: (row: ProductDTO) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingProduct(row);
-              setShowProductForm(true);
-            }}
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteProduct.mutate(row.productId);
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const handleRowClick = (row: ProductDTO) => {
+    const id = row.productId;
+    if (expandedProductId === id) {
+      setExpandedProductId(null);
+      setCurrentProductId(null);
+      return;
+    }
+    setExpandedProductId(id);
+    setCurrentProductId(id);
+  };
 
   // -------------------- Render --------------------
   return (
@@ -208,68 +179,34 @@ export default function Products() {
             }}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
-            <Plus className="w-4 h-4 mr-2" /> New Product
+            New Product
           </Button>
         }
       />
 
-      <DataTable
-        columns={columns}
-        data={products}
-        isLoading={isLoading}
-        onRowClick={(row: ProductDTO) => {
-          const id = row.productId;
-          if (expandedProductId === id) {
-            setExpandedProductId(null);
-            setCurrentProductId(null);
-            return;
-          }
-          setExpandedProductId(id);
-          setCurrentProductId(id);
+      <ProductsTable
+        products={products}
+        expandedProductId={expandedProductId}
+        loadingProducts={loadingProducts}
+        loadingVariants={loadingVariants}
+        onRowClick={handleRowClick}
+        onEditProduct={(p) => {
+          setEditingProduct(p);
+          setShowProductForm(true);
         }}
+        onDeleteProduct={(id) => deleteProduct.mutate(id)}
+        variants={variants} // variants are passed to the row dropdown
+        onAddVariant={(productId) => {
+          setCurrentProductId(productId);
+          setEditingVariant(null);
+          setShowVariantForm(true);
+        }}
+        onEditVariant={(v) => {
+          setEditingVariant(v);
+          setShowVariantForm(true);
+        }}
+        onDeleteVariant={(id) => deleteVariant.mutate(id)}
       />
-
-      {/* Variants Section */}
-      {expandedProductId !== null && currentProductId !== null && (
-        <div className="mt-4 rounded-xl p-4 space-y-4 bg-slate-100/60 border border-slate-300/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Variants</h3>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingVariant(null);
-                setShowVariantForm(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1" /> Add Variant
-            </Button>
-          </div>
-
-          {variantsLoading && <p className="text-xs text-slate-400 text-center">Loading variants…</p>}
-
-          {!variantsLoading && variants.length === 0 && (
-            <p className="text-xs text-slate-400 text-center">No variants yet</p>
-          )}
-
-          {!variantsLoading && variants.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {variants.map((v) => (
-                <VariantCard
-                  key={v.productVariantId}
-                  variant={v}
-                  onEdit={(variant) => {
-                    setEditingVariant(variant);
-                    setShowVariantForm(true);
-                  }}
-                  onDelete={(variantId) => {
-                    deleteVariant.mutate(variantId);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Product Dialog */}
       <Dialog open={showProductForm} onOpenChange={setShowProductForm}>
@@ -279,10 +216,10 @@ export default function Products() {
           </DialogHeader>
           <ProductForm
             product={editingProduct}
-            suppliers={suppliers}
             onSubmit={handleProductSubmit}
             onCancel={() => setShowProductForm(false)}
             isLoading={createProduct.isPending || updateProduct.isPending}
+            suppliers={suppliers}
           />
         </DialogContent>
       </Dialog>
