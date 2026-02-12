@@ -114,33 +114,31 @@ export default function PurchaseForm({
 
   // Handle submit
   const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!form.supplierId) return setErrors("Please select a supplier.");
-  if (form.items.some((i) => !i.productVariantId || !i.quantity || !i.costPrice))
-    return setErrors(
-      "Please select valid variants and fill quantity/cost for all items."
-    );
+    if (!form.supplierId) return setErrors("Please select a supplier.");
+    if (
+      form.items.some((i) => !i.productVariantId || !i.quantity || !i.costPrice)
+    )
+      return setErrors(
+        "Please select valid variants and fill quantity/cost for all items.",
+      );
 
-  setErrors("");
+    setErrors("");
 
-  // Build payload with correct keys
-  const payload: any = {
-  supplierId: Number(form.supplierId),
-  purchaseType: form.purchaseType,
-  purchaseDate: new Date(form.purchaseDate).toISOString(),
-  items: form.items.map((i) => ({
-    productVariantId: Number(i.productVariantId),
-    quantity: Number(i.quantity),
-    costPrice: Number(i.costPrice),
-  })),
-};
+    const payload: CreatePurchaseRequest = {
+      supplierId: Number(form.supplierId),
+      purchaseType: form.purchaseType,
+      purchaseDate: new Date(form.purchaseDate).toISOString(),
+      items: form.items.map((i) => ({
+        productVariantId: Number(i.productVariantId),
+        quantity: Number(i.quantity),
+        costPrice: Number(i.costPrice),
+      })),
+    };
 
-  // Submit
-  onSubmit(payload);
-};
-
-
+    onSubmit(payload);
+  };
 
   const grandTotal = form.items.reduce(
     (sum, item) => sum + Number(item.quantity) * Number(item.costPrice),
@@ -216,15 +214,15 @@ export default function PurchaseForm({
         {form.items.map((item, idx) => (
           <div
             key={`${item.productVariantId}-${idx}`}
-            className="flex items-end gap-2 p-3 bg-slate-50 rounded-xl"
+            className="flex flex-col sm:flex-row sm:items-end gap-2 p-3 bg-slate-50 rounded-xl"
           >
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <Label className="text-xs">Variant</Label>
               <Select
                 value={item.productVariantId}
                 onValueChange={(v) => updateItem(idx, "productVariantId", v)}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 w-full">
                   <SelectValue placeholder="Select variant" />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,11 +238,11 @@ export default function PurchaseForm({
               </Select>
             </div>
 
-            <div className="w-20">
+            <div className="w-full sm:w-20">
               <Label className="text-xs">Qty</Label>
               <Input
                 type="number"
-                className="h-9"
+                className="h-9 w-full"
                 value={item.quantity}
                 min={1}
                 onChange={(e) => updateItem(idx, "quantity", e.target.value)}
@@ -252,19 +250,19 @@ export default function PurchaseForm({
               />
             </div>
 
-            <div className="w-24">
+            <div className="w-full sm:w-24">
               <Label className="text-xs">Cost (£)</Label>
               <Input
                 type="number"
                 step="0.01"
-                className="h-9"
+                className="h-9 w-full"
                 value={item.costPrice}
                 min={0.01}
                 onChange={(e) => updateItem(idx, "costPrice", e.target.value)}
               />
             </div>
 
-            <div className="w-9 flex items-center justify-center">
+            <div className="w-full sm:w-9 flex justify-end sm:justify-center mt-2 sm:mt-0">
               {form.items.length > 1 && (
                 <Button
                   type="button"

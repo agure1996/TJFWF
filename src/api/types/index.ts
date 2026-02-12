@@ -97,10 +97,11 @@ export interface RequestPurchaseDTO {
 // Frontend-only request shape (matches backend)
 // --------------------
 export interface PurchaseItemRequest {
-  variantId: number;   // maps directly from form productVariantId
+  productVariantId: number;
   quantity: number;
-  unitCost: number;    // maps directly from form costPrice
+  costPrice: number;
 }
+
 
 export interface CreatePurchaseRequest {
   supplierId: number;

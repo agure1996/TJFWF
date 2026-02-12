@@ -1,55 +1,42 @@
-// src/pages/Purchases.tsx
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  purchaseService,
-  supplierService,
-  variantService,
-} from "@/api/services";
-import type { CreatePurchaseRequest } from "@/api/types";
-import type {
-  SupplierDTO,
-  ProductVariantDTO,
-  PurchaseDTO,
-  PurchaseRowDTO,
-} from "@/api/types";
+import { purchaseService, supplierService, variantService } from "@/api/services";
+import type { CreatePurchaseRequest, SupplierDTO, ProductVariantDTO, PurchaseDTO, PurchaseRowDTO } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import PageHeader from "../components/shared/PageHeader";
 import EmptyState from "../components/shared/EmptyState";
 import DataTable from "../components/shared/DataTable";
 import PurchaseForm from "../components/purchases/PurchaseForm";
+import PurchaseCard from "../components/purchases/PurchaseCard";
 
 export default function Purchases() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [editingPurchase, setEditingPurchase] = useState<
-    PurchaseRowDTO | undefined
-  >(undefined);
+  const [editingPurchase, setEditingPurchase] = useState<PurchaseRowDTO | undefined>(undefined);
 
+  // Fetch suppliers
   const { data: suppliers = [] } = useQuery<SupplierDTO[]>({
     queryKey: ["suppliers"],
     queryFn: () => supplierService.list().then((r) => r.data.data),
   });
 
+  // Fetch product variants
   const { data: variants = [] } = useQuery<ProductVariantDTO[]>({
     queryKey: ["variants"],
     queryFn: () => variantService.listAll().then((r) => r.data.data),
   });
 
+  // Fetch purchases
   const { data: purchasesDTO = [], isLoading } = useQuery<PurchaseDTO[]>({
     queryKey: ["purchases"],
     queryFn: () => purchaseService.list().then((r) => r.data.data),
   });
 
+  // Map purchases to row DTOs
   const purchases: PurchaseRowDTO[] = purchasesDTO.map((p: any) => ({
     id: p.purchaseId,
     supplier: p.supplier,
@@ -58,14 +45,12 @@ export default function Purchases() {
     items: p.items ?? [],
     totalCost:
       p.totalAmount ??
-      p.items?.reduce(
-        (sum: number, i: any) => sum + i.costPrice * i.quantity,
-        0,
-      ) ??
+      p.items?.reduce((sum: number, i: any) => sum + i.costPrice * i.quantity, 0) ??
       0,
     purchaseDate: p.purchaseDate,
   }));
 
+  // Mutations
   const savePurchase = useMutation({
     mutationFn: ({ id, data }: { id?: number; data: CreatePurchaseRequest }) =>
       id ? purchaseService.update(id, data) : purchaseService.create(data),
@@ -81,6 +66,7 @@ export default function Purchases() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["purchases"] }),
   });
 
+  // Columns for desktop DataTable
   const columns = [
     {
       key: "supplierName",
@@ -98,9 +84,7 @@ export default function Purchases() {
       key: "purchaseDate",
       label: "Date",
       render: (row: PurchaseRowDTO) =>
-        row.purchaseDate
-          ? format(new Date(row.purchaseDate), "MMM d, yyyy")
-          : "—",
+        row.purchaseDate ? format(new Date(row.purchaseDate), "MMM d, yyyy") : "—",
     },
     {
       key: "purchaseType",
@@ -126,9 +110,7 @@ export default function Purchases() {
     {
       key: "totalCost",
       label: "Total",
-      render: (row: PurchaseRowDTO) => (
-        <span className="font-bold">£{row.totalCost.toFixed(2)}</span>
-      ),
+      render: (row: PurchaseRowDTO) => <span className="font-bold">£{row.totalCost.toFixed(2)}</span>,
     },
     {
       key: "actions",
@@ -196,17 +178,38 @@ export default function Purchases() {
           }
         />
       ) : (
-        <DataTable
-          columns={columns}
-          data={purchases}
-          isLoading={isLoading}
-          onRowClick={(row: PurchaseRowDTO) => {
-            setEditingPurchase(row);
-            setShowForm(true);
-          }}
-        />
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <DataTable
+              columns={columns}
+              data={purchases}
+              isLoading={isLoading}
+              onRowClick={(row: PurchaseRowDTO) => {
+                setEditingPurchase(row);
+                setShowForm(true);
+              }}
+            />
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="block md:hidden">
+            {purchases.map((p) => (
+              <PurchaseCard
+                key={p.id}
+                purchase={p}
+                onEdit={() => {
+                  setEditingPurchase(p);
+                  setShowForm(true);
+                }}
+                onDelete={() => deletePurchase.mutate(p.id)}
+              />
+            ))}
+          </div>
+        </>
       )}
 
+      {/* Purchase Form Dialog */}
       <Dialog
         open={showForm}
         onOpenChange={(open) => {
@@ -216,9 +219,7 @@ export default function Purchases() {
       >
         <DialogContent className="sm:max-w-2xl w-full">
           <DialogHeader>
-            <DialogTitle>
-              {editingPurchase ? "Edit Purchase" : "New Purchase"}
-            </DialogTitle>
+            <DialogTitle>{editingPurchase ? "Edit Purchase" : "New Purchase"}</DialogTitle>
           </DialogHeader>
 
           <PurchaseForm
@@ -227,10 +228,8 @@ export default function Purchases() {
             variants={variants}
             onSubmit={(data: CreatePurchaseRequest) => {
               if (editingPurchase?.id) {
-                // Update
                 savePurchase.mutate({ id: editingPurchase.id, data });
               } else {
-                // Create
                 savePurchase.mutate({ data });
               }
             }}
