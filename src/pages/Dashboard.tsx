@@ -1,40 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
-import { productService, variantService, supplierService, purchaseService, saleService } from '@/api/services';
+import {
+  productService,
+  variantService,
+  supplierService,
+  purchaseService,
+  saleService,
+} from "@/api/services";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // <-- added useNavigate
 import { createPageUrl } from "../utils";
 import { motion } from "framer-motion";
 import PageHeader from "../components/shared/PageHeader";
 import { format } from "date-fns";
 
 export default function Dashboard() {
+  const navigate = useNavigate(); // <-- added
+
   const { data: productsRes = [] } = useQuery({
     queryKey: ["products"],
-    queryFn: () => productService.list().then(r => r.data.data),
+    queryFn: () => productService.list().then((r) => r.data.data),
   });
   const products = productsRes ?? [];
 
   const { data: variantsRes = [] } = useQuery({
     queryKey: ["variants"],
-    queryFn: () => variantService.listAll().then(r => r.data.data),
+    queryFn: () => variantService.listAll().then((r) => r.data.data),
   });
   const variants = variantsRes ?? [];
 
   const { data: suppliersRes = [] } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => supplierService.list().then(r => r.data.data),
+    queryFn: () => supplierService.list().then((r) => r.data.data),
   });
   const suppliers = suppliersRes ?? [];
 
   const { data: purchasesRes = [] } = useQuery({
     queryKey: ["purchases"],
-    queryFn: () => purchaseService.list().then(r => r.data.data),
+    queryFn: () => purchaseService.list().then((r) => r.data.data),
   });
   const purchases = (purchasesRes ?? []).slice(0, 5);
 
   const { data: salesRes = [] } = useQuery({
     queryKey: ["sales"],
-    queryFn: () => saleService.list().then(r => r.data.data),
+    queryFn: () => saleService.list().then((r) => r.data.data),
   });
   const sales = (salesRes ?? []).slice(0, 5);
 
@@ -53,19 +61,30 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <p className="text-sm text-slate-500 font-medium">Products</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{products.length}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {products.length}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <p className="text-sm text-slate-500 font-medium">Total Stock</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{totalStock.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {totalStock.toLocaleString()}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <p className="text-sm text-slate-500 font-medium">Suppliers</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{suppliers.length}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {suppliers.length}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <p className="text-sm text-slate-500 font-medium">Revenue</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">£{totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            £
+            {totalSalesAmount.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </p>
         </div>
       </div>
 
@@ -79,7 +98,9 @@ export default function Dashboard() {
           className="bg-white rounded-2xl border border-slate-100 p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Sales</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Recent Sales
+            </h2>
             <Link
               to={createPageUrl("Sales")}
               className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
@@ -88,17 +109,24 @@ export default function Dashboard() {
             </Link>
           </div>
           {sales.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">No sales yet</p>
+            <p className="text-sm text-slate-400 py-6 text-center">
+              No sales yet
+            </p>
           ) : (
             <div className="space-y-3">
-              {sales.slice(0, 5).map((sale) => (
-                <div key={sale.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80">
+              {sales.map((sale) => (
+                <div
+                  key={sale.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80"
+                >
                   <div>
                     <p className="text-sm font-medium text-slate-700">
                       Sale #{sale.id}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {sale.saleDate ? format(new Date(sale.saleDate), "MMM d, yyyy") : "—"}
+                      {sale.saleDate
+                        ? format(new Date(sale.saleDate), "MMM d, yyyy")
+                        : "—"}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-slate-900">
@@ -118,7 +146,9 @@ export default function Dashboard() {
           className="bg-white rounded-2xl border border-slate-100 p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Purchases</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Recent Purchases
+            </h2>
             <Link
               to={createPageUrl("Purchases")}
               className="text-sm text-[#8B7355] hover:text-[#6D5A45] font-medium flex items-center gap-1"
@@ -127,17 +157,24 @@ export default function Dashboard() {
             </Link>
           </div>
           {purchases.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">No purchases yet</p>
+            <p className="text-sm text-slate-400 py-6 text-center">
+              No purchases yet
+            </p>
           ) : (
             <div className="space-y-3">
-              {purchases.slice(0, 5).map((purchase) => (
-                <div key={purchase.purchaseId} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80">
+              {purchases.map((purchase) => (
+                <div
+                  key={purchase.purchaseId}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80"
+                >
                   <div>
                     <p className="text-sm font-medium text-slate-700">
                       Purchase #{purchase.purchaseId}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {purchase.purchaseDate ? format(new Date(purchase.purchaseDate), "MMM d, yyyy") : "—"}
+                      {purchase.purchaseDate
+                        ? format(new Date(purchase.purchaseDate), "MMM d, yyyy")
+                        : "—"}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-slate-900">
@@ -151,22 +188,39 @@ export default function Dashboard() {
       </div>
 
       {/* Low Stock Alert */}
-      {variants.some(v => (v.quantity ?? 0) <= 5) && (
+      {variants.some((v) => (v.quantity ?? 0) <= 5) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6"
         >
-          <h3 className="text-lg font-semibold text-amber-800 mb-3">Low Stock Alert</h3>
+          <h3 className="text-lg font-semibold text-amber-800 mb-3">
+            Low Stock Alert
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {variants.filter(v => (v.quantity ?? 0) <= 5).map(v => (
-              <div key={v.productVariantId} className="bg-white rounded-xl p-3 border border-amber-100">
-                <p className="text-sm font-medium text-slate-700">{v.sku}</p>
-                <p className="text-xs text-slate-500">{v.color} - Size {v.size}</p>
-                <p className="text-sm font-bold text-amber-600 mt-1">{v.quantity} left</p>
-              </div>
-            ))}
+            {variants
+              .filter((v) => (v.quantity ?? 0) <= 5)
+              .map((v) => (
+                <button
+                  key={v.productVariantId}
+                  type="button" // important
+                  className="bg-white rounded-xl p-3 border border-amber-100 cursor-pointer hover:bg-amber-50 text-left w-full"
+                  onClick={() =>
+                    navigate(
+                      `/products?productId=${v.productId}&variantId=${v.productVariantId}`,
+                    )
+                  }
+                >
+                  <p className="text-sm font-medium text-slate-700">{v.sku}</p>
+                  <p className="text-xs text-slate-500">
+                    {v.color} - Size {v.size}
+                  </p>
+                  <p className="text-sm font-bold text-amber-600 mt-1">
+                    {v.quantity} left
+                  </p>
+                </button>
+              ))}
           </div>
         </motion.div>
       )}

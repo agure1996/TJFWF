@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom"; // For query params
 import { productService } from "@/api/services/productService";
 import { variantService } from "@/api/services/variantService";
 import { supplierService } from "@/api/services/supplierService";
@@ -21,6 +22,7 @@ import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelp
 
 export default function Products() {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams(); // <-- read query params
 
   // -------------------- State --------------------
   const [showProductForm, setShowProductForm] = useState(false);
@@ -29,6 +31,7 @@ export default function Products() {
   const [currentProductId, setCurrentProductId] = useState<number | null>(null);
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariantDTO | null>(null);
+  const [highlightVariantId, setHighlightVariantId] = useState<number | null>(null); // <-- highlight
 
   // -------------------- Queries --------------------
   const { data: products = [], isLoading: loadingProducts } = useQuery<ProductDTO[]>({
@@ -49,6 +52,22 @@ export default function Products() {
     queryKey: ["suppliers"],
     queryFn: () => supplierService.list().then((r) => r.data.data),
   });
+
+  // -------------------- Highlight variant from query params --------------------
+  useEffect(() => {
+    const productIdParam = searchParams.get("productId");
+    const variantIdParam = searchParams.get("variantId");
+
+    if (productIdParam) {
+      const id = Number(productIdParam);
+      setExpandedProductId(id);
+      setCurrentProductId(id);
+    }
+
+    if (variantIdParam) {
+      setHighlightVariantId(Number(variantIdParam));
+    }
+  }, [searchParams]);
 
   // -------------------- Mutations --------------------
   const createProduct = useMutation({
@@ -187,25 +206,16 @@ export default function Products() {
       <ProductsTable
         products={products}
         expandedProductId={expandedProductId}
+        variants={variants}
         loadingProducts={loadingProducts}
         loadingVariants={loadingVariants}
         onRowClick={handleRowClick}
-        onEditProduct={(p) => {
-          setEditingProduct(p);
-          setShowProductForm(true);
-        }}
+        onEditProduct={(p) => { setEditingProduct(p); setShowProductForm(true); }}
         onDeleteProduct={(id) => deleteProduct.mutate(id)}
-        variants={variants} // variants are passed to the row dropdown
-        onAddVariant={(productId) => {
-          setCurrentProductId(productId);
-          setEditingVariant(null);
-          setShowVariantForm(true);
-        }}
-        onEditVariant={(v) => {
-          setEditingVariant(v);
-          setShowVariantForm(true);
-        }}
+        onAddVariant={(productId) => { setCurrentProductId(productId); setEditingVariant(null); setShowVariantForm(true); }}
+        onEditVariant={(v) => { setEditingVariant(v); setShowVariantForm(true); }}
         onDeleteVariant={(id) => deleteVariant.mutate(id)}
+        highlightVariantId={highlightVariantId} // <-- pass highlight to table
       />
 
       {/* Product Dialog */}

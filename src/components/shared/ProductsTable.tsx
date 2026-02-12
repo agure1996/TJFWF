@@ -15,10 +15,11 @@ export interface ProductsTableProps {
   loadingVariants: boolean;
   onRowClick: (row: ProductDTO) => void;
   onEditProduct: (product: ProductDTO) => void;
-  onDeleteProduct: (id: number) => void;
+  onDeleteProduct: (variantId: number) => void;
   onAddVariant: (productId: number) => void;
   onEditVariant: (variant: ProductVariantDTO) => void;
   onDeleteVariant: (variantId: number) => void;
+  highlightVariantId?: number | null; // <-- new
 }
 
 export default function ProductsTable({
@@ -33,6 +34,7 @@ export default function ProductsTable({
   onAddVariant,
   onEditVariant,
   onDeleteVariant,
+  highlightVariantId,
 }: Readonly<ProductsTableProps>) {
   if (loadingProducts) {
     return <p className="text-center text-slate-400">Loading products…</p>;
@@ -90,7 +92,7 @@ export default function ProductsTable({
                 {/* Expanded variants row */}
                 {expandedProductId === product.productId && (
                   <TableRow>
-                    <TableCell {...({colSpan:3})} className="p-4 bg-slate-100/60 rounded-xl">
+                    <TableCell {...({ colSpan: 3 })} className="p-4 bg-slate-100/60 rounded-xl">
                       <div className="space-y-4">
                         <h3 className="text-sm font-semibold">Variants</h3>
 
@@ -110,6 +112,7 @@ export default function ProductsTable({
                                 variant={v}
                                 onEdit={onEditVariant}
                                 onDelete={onDeleteVariant}
+                                highlight={highlightVariantId === v.productVariantId} // <-- highlight
                               />
                             ))}
                           </div>
