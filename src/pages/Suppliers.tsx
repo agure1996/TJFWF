@@ -17,11 +17,16 @@ export default function Suppliers() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierDTO | null>(null);
 
+  // Fetch suppliers
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => supplierService.list().then(r => r.data.data),
   });
 
+  // Map suppliers for DataTable (DataTable expects `id`)
+  const supplierRows = suppliers.map((s) => ({ id: s.supplierId, ...s }));
+
+  // Mutations
   const createSupplier = useMutation({
     mutationFn: (data: SupplierRequest) =>
       supplierService.create(data).then(r => r.data.data),
@@ -60,6 +65,7 @@ export default function Suppliers() {
     }
   };
 
+  // Columns for desktop DataTable
   const columns = [
     {
       key: "supplierName",
@@ -144,7 +150,44 @@ export default function Suppliers() {
           }
         />
       ) : (
-        <DataTable columns={columns} data={suppliers} isLoading={isLoading} onRowClick={undefined} />
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <DataTable
+              columns={columns}
+              data={supplierRows}
+              isLoading={isLoading}
+            />
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="block md:hidden space-y-2">
+            {supplierRows.map((s) => (
+              <div
+                key={s.id}
+                className="p-3 bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center gap-2"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <Truck className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium">{s.supplierName}</div>
+                    <div className="text-sm text-slate-400">{s.supplierContactInfo}</div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-1 mt-2 sm:mt-0">
+                  <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setShowForm(true); }}>
+                    <Pencil className="w-4 h-4 text-slate-400" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => deleteSupplier.mutate(s.id)}>
+                    <Trash2 className="w-4 h-4 text-slate-400" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>

@@ -12,6 +12,7 @@ import EmptyState from "../components/shared/EmptyState";
 import DataTable from "../components/shared/DataTable";
 import PurchaseForm from "../components/purchases/PurchaseForm";
 import PurchaseCard from "../components/purchases/PurchaseCard";
+import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper"; // <- import toast helpers
 
 export default function Purchases() {
   const queryClient = useQueryClient();
@@ -50,7 +51,7 @@ export default function Purchases() {
     purchaseDate: p.purchaseDate,
   }));
 
-  // Mutations
+  // Mutations with toasts
   const savePurchase = useMutation({
     mutationFn: ({ id, data }: { id?: number; data: CreatePurchaseRequest }) =>
       id ? purchaseService.update(id, data) : purchaseService.create(data),
@@ -58,12 +59,21 @@ export default function Purchases() {
       queryClient.invalidateQueries({ queryKey: ["purchases"] });
       setShowForm(false);
       setEditingPurchase(undefined);
+
+      if (editingPurchase) {
+        toastUpdate("Purchase updated successfully"); // <- toast on update
+      } else {
+        toastCreate("Purchase created successfully"); // <- toast on create
+      }
     },
   });
 
   const deletePurchase = useMutation({
     mutationFn: (id: number) => purchaseService.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["purchases"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchases"] });
+      toastDelete("Purchase deleted successfully"); // <- toast on delete
+    },
   });
 
   // Columns for desktop DataTable
