@@ -31,6 +31,13 @@ export const toastUpdate = (message: string) => {
   });
 };
 
+export const toastError = (err: any) => {
+  const message =
+    err?.response?.data?.message || "An unexpected error occurred";
+  toast.error(message);
+};
+
+
 // Delete toast (red/black)
 export const toastDelete = (message: string) => {
   toast.success(message, {

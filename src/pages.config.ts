@@ -2,7 +2,7 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Suppliers from './pages/Suppliers';
 import Purchases from './pages/Purchases';
-import Sales from './pages/Sales';
+import Sales from './pages/Sales.js';
 import Analytics from './pages/Analytics';
 import Expenses from './pages/Expenses';
 import __Layout from './Layout.js';

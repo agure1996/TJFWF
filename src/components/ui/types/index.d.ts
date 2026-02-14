@@ -37,7 +37,7 @@ export const Textarea: ForwardRefExoticComponent<TextareaProps & RefAttributes<H
 
 // Select Components
 export interface SelectProps {
-  value?: string;
+  value?: string | number;
   onValueChange?: (value: string) => void;
   children?: ReactNode;
   disabled?: boolean;

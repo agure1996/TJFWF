@@ -1,5 +1,3 @@
-// src/api/types/index.ts
-
 // --------------------
 // Generic API response
 // --------------------
@@ -11,6 +9,14 @@ export interface ApiResponse<T> {
 // --------------------
 // Products
 // --------------------
+export type ProductType =
+  | "ABAYA"
+  | "HIJAB"
+  | "DRESS"
+  | "JILBAB"
+  | "KHIMAR"
+  | "THOWB";
+
 export interface ProductDTO {
   productId: number;
   productName: string;
@@ -32,6 +38,7 @@ export interface RequestProductDTO {
 export interface ProductVariantDTO {
   productVariantId: number;
   productId?: number;
+  productName: string;
   color?: string;
   size: number;
   quantity?: number;
@@ -42,21 +49,80 @@ export interface ProductVariantDTO {
 export interface RequestProductVariantDTO {
   productId?: number;
   color: string;
-  size: number;     
+  size: number;
   quantity: number;
   salePrice: number;
 }
 
-export type CreateProductVariantDTO = Omit<RequestProductVariantDTO, "productId">;
+export type CreateProductVariantDTO = Omit<
+  RequestProductVariantDTO,
+  "productId"
+>;
 
-export const PRODUCT_TYPES = ["ABAYA", "HIJAB", "DRESS", "JILBAB", "KHIMAR", "THOWB"] as const;
-export type ProductType = typeof PRODUCT_TYPES[number];
+// --------------------
+// Sales
+// --------------------
+export interface SaleItemDTO {
+  productVariant: ProductVariantDTO;
+  quantity: number;
+  salePrice: number;
+  // costPrice removed
+}
+
+export interface SaleDTO {
+  saleId: number;        // previously saleId, ensure backend matches
+  saleDate: string;
+  customerName: string;
+  customerContact: string;
+  items: SaleItemDTO[];
+  totalAmount: number;
+}
+
+export interface SaleFormItem {
+  productVariantId: number; // use number instead of string for RHF compatibility
+  quantity: number;
+  salePrice: number;
+}
+
+export interface CreateSaleItemRequest {
+  productVariantId: number;
+  quantity: number;
+  salePrice: number;
+  // costPrice removed
+}
+
+export interface CreateSaleRequest {
+  saleDate: string;
+  customerName: string;
+  customerContact: string;
+  items: CreateSaleItemRequest[];
+}
 
 // --------------------
 // Purchases
 // --------------------
+export interface PurchaseItemRequest {
+  productVariantId: number;
+  quantity: number;
+  costPrice: number;
+}
+
+export interface CreatePurchaseRequest {
+  supplierId: number;
+  purchaseType: "SINGLE" | "BATCH";
+  purchaseDate: string;
+  items: PurchaseItemRequest[];
+}
+
+export interface PurchaseItemDTO {
+  id: number;
+  name: string;
+  quantity: number;
+  costPrice: number;
+}
+
 export interface PurchaseDTO {
-  purchaseId: number;                 // was purchaseId
+  purchaseId: number;
   supplier?: SupplierDTO;
   purchaseType: "SINGLE" | "BATCH";
   purchaseDate?: string;
@@ -65,75 +131,30 @@ export interface PurchaseDTO {
 }
 
 export interface PurchaseRowDTO {
-  id: number;
+  id: string;
   supplier?: SupplierDTO;
   supplierName: string;
-  purchaseType: "SINGLE" | "BATCH";
   items: PurchaseItemDTO[];
+  purchaseType: "BATCH" | "SINGLE";
+  purchaseDate?: string | Date;
   totalCost: number;
-  purchaseDate?: string;
-}
-
-export interface PurchaseItemDTO {
-  productVariant: ProductVariantDTO;
-  quantity: number;
-  costPrice: number;
-}
-
-// Backend request DTO
-// optional, align backend requests
-export interface RequestPurchaseDTO {
-  supplierId?: number;
-  purchaseType?: "SINGLE" | "BATCH";
-  purchaseDate: string;
-  items?: {
-    productVariantId: number;
-    quantity: number;
-    costPrice: number;
-  }[];
-}
-
-// --------------------
-// Frontend-only request shape (matches backend)
-// --------------------
-export interface PurchaseItemRequest {
-  productVariantId: number;
-  quantity: number;
-  costPrice: number;
-}
-
-
-export interface CreatePurchaseRequest {
-  supplierId: number;
-  purchaseType: "SINGLE" | "BATCH";
-  purchaseDate: string;       // ISO string
-  items: PurchaseItemRequest[];
-}
-
-// --------------------
-// Sales
-// --------------------
-export interface SaleDTO {
-  id: number;
-  total?: number;
-  saleDate?: string;
 }
 
 // --------------------
 // Suppliers
 // --------------------
-export type SupplierDTO = {
+export interface SupplierDTO {
   supplierId: number;
   supplierName: string;
   supplierContactInfo: string;
   notes?: string;
-};
+}
 
-export type RequestSupplierDTO = {
+export interface RequestSupplierDTO {
   supplierName: string;
   supplierContactInfo: string;
   notes?: string;
-};
+}
 
 // --------------------
 // Expenses

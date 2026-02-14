@@ -1,15 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type {
   ProductDTO,
   ProductType,
@@ -41,7 +31,6 @@ export default function ProductForm({
   onCancel,
   isLoading = false,
 }: Readonly<ProductFormProps>) {
-  // supplierId is now string | undefined
   const [form, setForm] = useState<{
     productName: string;
     productType: ProductType;
@@ -49,7 +38,7 @@ export default function ProductForm({
     supplierId?: string;
   }>({
     productName: "",
-    productType: PRODUCT_TYPES[0], // Default to first product type
+    productType: PRODUCT_TYPES[0],
     productDescription: "",
     supplierId: undefined,
   });
@@ -74,93 +63,99 @@ export default function ProductForm({
       productName: form.productName,
       productType: form.productType,
       productDescription: form.productDescription,
-      supplierId: form.supplierId ? Number(form.supplierId) : undefined, // convert string to number here
+      supplierId: form.supplierId ? Number(form.supplierId) : undefined,
     };
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="productName">Product Name</Label>
-        <Input
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Product Name */}
+      <div className="flex flex-col">
+        <label htmlFor="productName" className="text-sm font-medium text-slate-700 mb-1.5">
+          Product Name
+        </label>
+        <input
           id="productName"
+          type="text"
           value={form.productName}
           onChange={(e) => setForm({ ...form, productName: e.target.value })}
           placeholder="e.g. Silk Abaya"
           required
+          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="productType">Product Type</Label>
-        <Select
+      {/* Product Type */}
+      <div className="flex flex-col">
+        <label htmlFor="productType" className="text-sm font-medium text-slate-700 mb-1.5">
+          Product Type
+        </label>
+        <select
+          id="productType"
           value={form.productType}
-          onValueChange={(value) =>
-            setForm((prev) => ({ ...prev, productType: value as ProductType }))
-          }
+          onChange={(e) => setForm({ ...form, productType: e.target.value as ProductType })}
+          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select product type" />
-          </SelectTrigger>
-
-          <SelectContent>
-            {PRODUCT_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type.charAt(0) + type.slice(1).toLowerCase()}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {PRODUCT_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type.charAt(0) + type.slice(1).toLowerCase()}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="productDescription">Description</Label>
-        <Textarea
+      {/* Description */}
+      <div className="flex flex-col">
+        <label htmlFor="productDescription" className="text-sm font-medium text-slate-700 mb-1.5">
+          Description
+        </label>
+        <textarea
           id="productDescription"
           value={form.productDescription}
-          onChange={(e) =>
-            setForm({ ...form, productDescription: e.target.value })
-          }
+          onChange={(e) => setForm({ ...form, productDescription: e.target.value })}
           placeholder="Optional description..."
           rows={3}
+          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="supplier">Supplier (Optional)</Label>
-        <Select
-          value={form.supplierId} // <-- now always string | undefined
-          onValueChange={(val) =>
-            setForm({ ...form, supplierId: val || undefined })
-          } // undefined instead of null
+      {/* Supplier */}
+      <div className="flex flex-col">
+        <label htmlFor="supplier" className="text-sm font-medium text-slate-700 mb-1.5">
+          Supplier (Optional)
+        </label>
+        <select
+          id="supplier"
+          value={form.supplierId || ""}
+          onChange={(e) => setForm({ ...form, supplierId: e.target.value || undefined })}
+          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a supplier" />
-          </SelectTrigger>
-          <SelectContent>
-            {suppliers.map((supplier) => (
-              <SelectItem
-                key={supplier.supplierId}
-                value={String(supplier.supplierId)}
-              >
-                {supplier.supplierName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="">Select a supplier</option>
+          {suppliers.map((supplier) => (
+            <option key={supplier.supplierId} value={String(supplier.supplierId)}>
+              {supplier.supplierName}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+        >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className="px-6 bg-indigo-600 hover:bg-indigo-700 text-white"
         >
-          {product ? "Update" : "Create"} Product
+          {product ? "Update Product" : "Create Product"}
         </Button>
       </div>
     </form>

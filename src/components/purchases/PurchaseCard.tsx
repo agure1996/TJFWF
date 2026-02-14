@@ -1,20 +1,15 @@
-import type { PurchaseRowDTO } from "@/api/types"; // <-- your type
-import { Button } from "@/components/ui/button"; // <-- UI Button
-import { Badge } from "@/components/ui/badge"; // <-- Badge
-import { ShoppingCart, Trash2 } from "lucide-react"; // <-- icons
-import { format } from "date-fns"; // <-- date formatting
-
+import type { PurchaseRowDTO } from "@/api/types";
+import { format } from "date-fns";
+import { ShoppingCart, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";      // UI button
+import { Badge } from "@/components/ui/badge";   
 interface PurchaseCardProps {
-  readonly purchase: PurchaseRowDTO; // readonly to satisfy SonarLint
-  readonly onEdit: () => void;
-  readonly onDelete: () => void;
+  purchase: PurchaseRowDTO;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-export default function PurchaseCard({
-  purchase,
-  onEdit,
-  onDelete,
-}: PurchaseCardProps) {
+export function PurchaseCard({ purchase, onEdit, onDelete }: Readonly<PurchaseCardProps>) {
   return (
     <div className="bg-white rounded-xl shadow p-4 mb-3 flex flex-col gap-2">
       <div className="flex justify-between items-start">
@@ -41,11 +36,7 @@ export default function PurchaseCard({
       </div>
 
       <div className="flex justify-between text-sm text-gray-500">
-        <span>
-          {purchase.purchaseDate
-            ? format(new Date(purchase.purchaseDate), "MMM d, yyyy")
-            : "—"}
-        </span>
+        <span>{purchase.purchaseDate ? format(new Date(purchase.purchaseDate), "MMM d, yyyy") : "—"}</span>
         <Badge
           variant="secondary"
           className={

@@ -15,11 +15,11 @@ export interface ProductsTableProps {
   loadingVariants: boolean;
   onRowClick: (row: ProductDTO) => void;
   onEditProduct: (product: ProductDTO) => void;
-  onDeleteProduct: (variantId: number) => void;
+  onDeleteProduct: (productId: number) => void;
   onAddVariant: (productId: number) => void;
   onEditVariant: (variant: ProductVariantDTO) => void;
   onDeleteVariant: (variantId: number) => void;
-  highlightVariantId?: number | null; // <-- new
+  highlightVariantId?: number | null;
 }
 
 export default function ProductsTable({
@@ -38,6 +38,12 @@ export default function ProductsTable({
 }: Readonly<ProductsTableProps>) {
   if (loadingProducts) {
     return <p className="text-center text-slate-400">Loading products…</p>;
+  }
+
+  if (products.length === 0) {
+    return (
+      <p className="text-center text-slate-400 py-8">No products yet. Click "New Product" to add one.</p>
+    );
   }
 
   return (
@@ -92,7 +98,7 @@ export default function ProductsTable({
                 {/* Expanded variants row */}
                 {expandedProductId === product.productId && (
                   <TableRow>
-                    <TableCell {...({ colSpan: 3 })} className="p-4 bg-slate-100/60 rounded-xl">
+                    <td colSpan={3} className="p-4 bg-slate-100/60 rounded-xl">
                       <div className="space-y-4">
                         <h3 className="text-sm font-semibold">Variants</h3>
 
@@ -112,7 +118,7 @@ export default function ProductsTable({
                                 variant={v}
                                 onEdit={onEditVariant}
                                 onDelete={onDeleteVariant}
-                                highlight={highlightVariantId === v.productVariantId} // <-- highlight
+                                highlight={highlightVariantId === v.productVariantId}
                               />
                             ))}
                           </div>
@@ -125,7 +131,7 @@ export default function ProductsTable({
                           Add Variant
                         </Button>
                       </div>
-                    </TableCell>
+                    </td>
                   </TableRow>
                 )}
               </React.Fragment>
