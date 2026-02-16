@@ -517,9 +517,7 @@ export default function Products() {
                   </th>
                   <th
                     className={`px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider ${darkMode ? "text-[#A39180]" : "text-slate-500"}`}
-                  >
-                    Actions
-                  </th>
+                  ></th>
                 </tr>
               </thead>
               <tbody
@@ -817,7 +815,9 @@ export default function Products() {
       {/* Product Dialog */}
       <Dialog open={showProductForm} onOpenChange={setShowProductForm}>
         <DialogContent
-          className={`sm:max-w-md max-h-[90vh] overflow-y-auto ${darkMode ? "bg-neutral-800 border-neutral-700" : "bg-white"}`}
+          className={`w-full sm:max-w-2xl max-h-[90vh] sm:rounded-lg overflow-y-auto ${
+            darkMode ? "bg-neutral-800 border-neutral-700" : "bg-white"
+          }`}
         >
           <DialogHeader>
             <DialogTitle
