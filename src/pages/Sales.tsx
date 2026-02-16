@@ -200,7 +200,7 @@ export default function Sales(): JSX.Element {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {sale.items.length} item{sale.items.length !== 1 ? "s" : ""}
+                        {sale.items.length} item{sale.items.length === 1 ? "" : "s"}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -266,7 +266,7 @@ export default function Sales(): JSX.Element {
                           {sale.customerName || "Walk-in"}
                         </div>
                         <div className="text-xs text-slate-500">
-                          {sale.items.length} item{sale.items.length !== 1 ? "s" : ""}
+                          {sale.items.length} item{sale.items.length === 1 ? "" : "s"}
                         </div>
                       </div>
                     </div>
