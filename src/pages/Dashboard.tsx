@@ -48,8 +48,8 @@ export default function Dashboard() {
     
     // The response IS the array, not wrapped in .data.data
     // Check if response has .data property, otherwise use response directly
-    if (response.data) {
-      return Array.isArray(response.data) ? response.data : response.data.data || [];
+    if (response) {
+      return Array.isArray(response) ? response : [];
     }
     
     return Array.isArray(response) ? response : [];

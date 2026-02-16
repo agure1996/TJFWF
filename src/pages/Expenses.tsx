@@ -4,9 +4,9 @@ import { expenseService } from '@/api/services';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Receipt, Inbox } from "lucide-react";
+import { Plus, Pencil, Trash2, Wallet, Inbox } from "lucide-react";
 import { format } from "date-fns";
-import ExpenseForm from "../components/expenses/ExpenseForm";
+import ExpenseForm from "@/components/expenses/ExpenseForm";
 import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
 
 const TYPE_COLORS = {
@@ -193,7 +193,7 @@ export default function Expenses() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center mr-3">
-                          <Receipt className="w-4 h-4 text-rose-600" />
+                          <Wallet className="w-4 h-4 text-rose-600" />
                         </div>
                         <div className="text-sm font-medium text-slate-900">
                           {expense.expenseName}
@@ -262,7 +262,7 @@ export default function Expenses() {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3 flex-1">
                     <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
-                      <Receipt className="w-5 h-5 text-rose-600" />
+                      <Wallet className="w-5 h-5 text-rose-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-slate-900 truncate">

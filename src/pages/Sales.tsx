@@ -5,7 +5,7 @@ import type { SaleDTO, CreateSaleRequest, SaleFormItem } from "@/api/types";
 import { SaleForm } from "@/components/sales/SaleForm";
 import { toastCreate, toastError } from "@/components/ui/toastHelper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Inbox, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Inbox, ReceiptText  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Sales(): JSX.Element {
@@ -169,7 +169,7 @@ export default function Sales(): JSX.Element {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center mr-3">
-                          <Tag className="w-4 h-4 text-indigo-600" />
+                          <ReceiptText  className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">
@@ -259,7 +259,7 @@ export default function Sales(): JSX.Element {
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Tag className="w-5 h-5 text-indigo-600" />
+                        <ReceiptText  className="w-5 h-5 text-indigo-600" />
                       </div>
                       <div>
                         <div className="text-sm font-semibold text-slate-900">
