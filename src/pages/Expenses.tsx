@@ -50,7 +50,7 @@ type KnownExpenseType = keyof typeof TYPE_COLORS;
 export default function Expenses() {
   const queryClient = useQueryClient();
   const { darkMode } = useTheme();
-  const { toastCreate, toastUpdate, toastDelete, toastError } = useToastHelper();
+  const { toastCreate, toastUpdate, toastDelete } = useToastHelper();
   
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ExpenseType | undefined>(undefined);
