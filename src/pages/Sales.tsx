@@ -11,7 +11,7 @@ import { useToastHelper } from "@/components/ui/toastHelper";
 
 export default function Sales(): JSX.Element {
   const location = useLocation();
-  const { toastCreate, toastError } = useToastHelper();
+  const { toastCreate, toastUpdate, toastError } = useToastHelper();
   const { darkMode } = useTheme();
   const [sales, setSales] = useState<SaleDTO[]>([]);
   const [editingSale, setEditingSale] = useState<SaleDTO | null>(null);
@@ -61,7 +61,7 @@ export default function Sales(): JSX.Element {
     try {
       if (editingSale) {
         await saleService.update(editingSale.saleId, payload);
-        toastCreate("Sale updated");
+        toastUpdate("Sale updated");
       } else {
         await saleService.create(payload);
         toastCreate("Sale created");
@@ -69,8 +69,8 @@ export default function Sales(): JSX.Element {
       setShowForm(false);
       setEditingSale(null);
       fetchSales();
-    } catch {
-      toastError("Failed to submit sale");
+    } catch(e: any) {
+      toastError(`Failed to submit sale: ${e.message}`);
     }
   };
 
@@ -188,8 +188,8 @@ export default function Sales(): JSX.Element {
                     className={`transition-all ${
                       highlightSaleId === sale.saleId
                         ? darkMode
-                          ? "bg-green-900/20 ring-2 ring-green-600"
-                          : "bg-green-50 ring-2 ring-green-300"
+                          ? "bg-amber-900/20 ring-2 ring-amber-600"
+                          : "bg-amber-50 ring-2 ring-amber-300"
                         : darkMode
                           ? "hover:bg-neutral-700"
                           : "hover:bg-slate-50"
@@ -288,12 +288,13 @@ export default function Sales(): JSX.Element {
                   className={`rounded-xl shadow-sm border p-4 transition-all ${
                     highlightSaleId === sale.saleId
                       ? darkMode
-                        ? "bg-green-900/20 border-green-600 ring-2 ring-green-600"
-                        : "bg-green-50 border-green-300 ring-2 ring-green-300"
+                        ? "bg-amber-900/20 border-amber-600 ring-2 ring-amber-600"
+                        : "bg-amber-50 border-amber-300 ring-2 ring-amber-300"
                       : darkMode
                         ? "bg-neutral-800 border-neutral-700"
                         : "bg-white border-slate-200"
                   }`}
+                                       
                 >
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">

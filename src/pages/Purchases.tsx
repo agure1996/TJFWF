@@ -21,7 +21,7 @@ import { useToastHelper } from "@/components/ui/toastHelper";
 
 export default function Purchases() {
   const queryClient = useQueryClient();
-  const { toastCreate, toastUpdate, toastDelete, toastError } = useToastHelper();
+  const { toastCreate, toastUpdate, toastDelete } = useToastHelper();
   const location = useLocation();
   const { darkMode } = useTheme();
   const [showForm, setShowForm] = useState(false);
@@ -225,7 +225,7 @@ export default function Purchases() {
                       highlightPurchaseId === Number.parseInt(purchase.id)
                         ? darkMode 
                           ? "bg-[#8B7355]/20 ring-2 ring-[#8B7355]"
-                          : "bg-indigo-50 ring-2 ring-indigo-300"
+                          : "bg-amber-50 ring-2 ring-amber-300"
                         : darkMode 
                           ? "hover:bg-neutral-700"
                           : "hover:bg-slate-50"
@@ -315,7 +315,7 @@ export default function Purchases() {
                   highlightPurchaseId === Number.parseInt(purchase.id)
                     ? darkMode
                       ? "bg-[#8B7355]/20 border-[#8B7355] ring-2 ring-[#8B7355]"
-                      : "bg-indigo-50 border-indigo-300 ring-2 ring-indigo-300"
+                      : "bg-amber-50 border-amber-300 ring-2 ring-amber-300"
                     : darkMode
                       ? "bg-neutral-800 border-neutral-700"
                       : "bg-white border-slate-200"
