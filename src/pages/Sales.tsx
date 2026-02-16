@@ -11,8 +11,8 @@ import { useToastHelper } from "@/components/ui/toastHelper";
 
 export default function Sales(): JSX.Element {
   const location = useLocation();
-  const { toastCreate, toastUpdate, toastError } = useToastHelper();
   const { darkMode } = useTheme();
+  const { toastCreate, toastError } = useToastHelper();
   const [sales, setSales] = useState<SaleDTO[]>([]);
   const [editingSale, setEditingSale] = useState<SaleDTO | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -24,8 +24,8 @@ export default function Sales(): JSX.Element {
     try {
       const data = await saleService.list();
       setSales(data);
-    } catch {
-      toastError("Failed to fetch sales");
+    } catch (error) {
+      toastError(error); // Your toastHelper already handles this!
     } finally {
       setLoading(false);
     }
@@ -61,16 +61,20 @@ export default function Sales(): JSX.Element {
     try {
       if (editingSale) {
         await saleService.update(editingSale.saleId, payload);
-        toastUpdate("Sale updated");
+        toastCreate("Sale updated successfully");
       } else {
         await saleService.create(payload);
-        toastCreate("Sale created");
+        toastCreate("Sale created successfully");
       }
       setShowForm(false);
       setEditingSale(null);
       fetchSales();
-    } catch(e: any) {
-      toastError(`Failed to submit sale: ${e.message}`);
+    } catch (error) {
+      // Your toastHelper already extracts the message!
+      toastError(error);
+      
+      // Don't close form on error so user can fix issues
+      console.error('Sale creation/update failed:', error);
     }
   };
 
@@ -79,10 +83,10 @@ export default function Sales(): JSX.Element {
     
     try {
       await saleService.remove(id);
-      toastCreate("Sale deleted");
+      toastCreate("Sale deleted successfully");
       fetchSales();
-    } catch {
-      toastError("Failed to delete sale");
+    } catch (error) {
+      toastError(error);
     }
   };
 
@@ -176,7 +180,7 @@ export default function Sales(): JSX.Element {
                   <th className={`px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider ${
                     darkMode ? 'text-[#A39180]' : 'text-slate-500'
                   }`}>
-                    
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -294,7 +298,6 @@ export default function Sales(): JSX.Element {
                         ? "bg-neutral-800 border-neutral-700"
                         : "bg-white border-slate-200"
                   }`}
-                                       
                 >
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
@@ -366,10 +369,9 @@ export default function Sales(): JSX.Element {
 
       {/* Modal */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className={`w-full sm:max-w-2xl max-h-[90vh] sm:rounded-lg overflow-y-auto ${
-  darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'
-}`}>
-
+        <DialogContent className={`sm:max-w-2xl max-h-[90vh] overflow-y-auto ${
+          darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'
+        }`}>
           <DialogHeader>
             <DialogTitle className={`text-xl font-semibold ${
               darkMode ? 'text-white' : 'text-slate-900'

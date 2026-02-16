@@ -1,4 +1,4 @@
-// toastHelper.ts
+// toastHelper.ts - Enhanced version
 import { toast } from "sonner";
 import { useTheme } from "@/ThemeContext";
 
@@ -56,11 +56,36 @@ export const useToastHelper = () => {
     });
   };
 
+  /**
+   * Enhanced toastError that handles both error objects and strings
+   */
   const toastError = (err: any) => {
-    const message =
-      err?.response?.data?.message || "An unexpected error occurred";
+    let message: string;
+
+    // If it's a string, use it directly
+    if (typeof err === 'string') {
+      message = err;
+    } 
+    // If it's an error object from axios/backend
+    else {
+      // Extract message from various formats
+      message = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.response?.data?.errors?.[0]?.message ||
+        err?.message ||
+        "An unexpected error occurred";
+
+      // Make stock errors more user-friendly
+      if (message.includes('Insufficient stock')) {
+        const stockMatch = /variant: (.+?)(?:\s|$)/.exec(message);
+        const sku = stockMatch ? stockMatch[1] : 'selected product';
+        message = `Not enough stock for ${sku}. Please reduce quantity or restock.`;
+      }
+    }
+
     toast.error(message, {
-      duration: 3000,
+      duration: 4000, // Longer duration for errors so user can read them
       style: {
         borderRadius: "8px",
         background: darkMode ? "#2a1a1a" : "#fde2e2",
@@ -75,4 +100,78 @@ export const useToastHelper = () => {
   };
 
   return { toastCreate, toastUpdate, toastDelete, toastError };
+};
+
+/**
+ * Non-hook versions for use outside components
+ * (e.g., in utility functions or API interceptors)
+ */
+export const toastCreate = (message: string) => {
+  toast.success(message, {
+    duration: 3000,
+    style: {
+      borderRadius: "8px",
+      background: "#f0f0f0",
+      color: "#000",
+      padding: "8px 16px",
+      fontWeight: 600,
+    },
+  });
+};
+
+export const toastUpdate = (message: string) => {
+  toast.success(message, {
+    duration: 3000,
+    style: {
+      borderRadius: "8px",
+      background: "#fff4e5",
+      color: "#d97706", 
+      padding: "8px 16px",
+      fontWeight: 600,
+    },
+  });
+};
+
+export const toastDelete = (message: string) => {
+  toast.success(message, {
+    duration: 3000,
+    style: {
+      borderRadius: "8px",
+      background: "#000",
+      color: "#ff4d4f", 
+      padding: "8px 16px",
+      fontWeight: 600,
+    },
+  });
+};
+
+export const toastError = (err: any) => {
+  let message: string;
+
+  if (typeof err === 'string') {
+    message = err;
+  } else {
+    message = 
+      err?.response?.data?.message || 
+      err?.response?.data?.error ||
+      err?.message ||
+      "An unexpected error occurred";
+
+    if (message.includes('Insufficient stock')) {
+      const stockMatch = /variant: (.+?)(?:\s|$)/.exec(message);
+      const sku = stockMatch ? stockMatch[1] : 'selected product';
+      message = `Not enough stock for ${sku}. Please reduce quantity or restock.`;
+    }
+  }
+
+  toast.error(message, {
+    duration: 4000,
+    style: {
+      borderRadius: "8px",
+      background: "#fde2e2",
+      color: "#b91c1c", 
+      padding: "8px 16px",
+      fontWeight: 600,
+    },
+  });
 };
