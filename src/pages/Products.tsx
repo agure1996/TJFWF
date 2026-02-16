@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { productService } from "@/api/services/productService";
@@ -6,12 +6,13 @@ import { variantService } from "@/api/services/variantService";
 import { supplierService } from "@/api/services/supplierService";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Package, ChevronDown, ChevronRight, Inbox } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, ChevronDown, ChevronRight, Inbox, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ProductForm from "@/components/products/ProductForm";
 import VariantForm from "@/components/products/VariantForm";
 import VariantCard from "@/components/products/VariantCard";
 import { PRODUCT_TYPE_BADGES, PRODUCT_TYPE_LABELS } from "@/constants/productType";
+import { useTheme } from "@/ThemeContext";
 import type {
   RequestProductVariantDTO,
   CreateProductVariantDTO,
@@ -20,12 +21,13 @@ import type {
   RequestProductDTO,
   SupplierDTO,
 } from "@/api/types";
-import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
+import { useToastHelper } from "@/components/ui/toastHelper";
 
 export default function Products() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-
+  const { darkMode } = useTheme();
+  const { toastCreate, toastUpdate, toastDelete } = useToastHelper();
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductDTO | null>(null);
   const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
@@ -33,11 +35,20 @@ export default function Products() {
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariantDTO | null>(null);
   const [highlightVariantId, setHighlightVariantId] = useState<number | null>(null);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState<"all" | "color" | "size" | "sku">("all");
 
   // Fetch products, variants, suppliers
   const { data: products = [], isLoading: loadingProducts } = useQuery<ProductDTO[]>({
     queryKey: ["products"],
     queryFn: () => productService.list().then((r) => r.data.data),
+  });
+
+  const { data: allVariants = [] } = useQuery<ProductVariantDTO[]>({
+    queryKey: ["allVariants"],
+    queryFn: () => variantService.listAll().then((r) => r.data.data),
   });
 
   const { data: variants = [], isLoading: loadingVariants } = useQuery<ProductVariantDTO[]>({
@@ -54,6 +65,35 @@ export default function Products() {
     queryFn: () => supplierService.list().then((r) => r.data.data),
   });
 
+  // Filter variants based on search
+  const filteredVariants = useMemo(() => {
+    if (!searchQuery.trim()) return { products, variants: allVariants };
+    
+    const query = searchQuery.toLowerCase();
+    const matchedVariants = allVariants.filter(variant => {
+      switch (searchFilter) {
+        case "color":
+          return variant.color?.toLowerCase().includes(query);
+        case "size":
+          return variant.size?.toString().includes(query);
+        case "sku":
+          return variant.sku?.toLowerCase().includes(query);
+        default:
+          return (
+            variant.color?.toLowerCase().includes(query) ||
+            variant.size?.toString().includes(query) ||
+            variant.sku?.toLowerCase().includes(query)
+          );
+      }
+    });
+
+    // Get unique product IDs from matched variants
+    const matchedProductIds = new Set(matchedVariants.map(v => v.productId));
+    const filteredProducts = products.filter(p => matchedProductIds.has(p.productId));
+
+    return { products: filteredProducts, variants: matchedVariants };
+  }, [searchQuery, searchFilter, products, allVariants]);
+
   // Handle URL params to expand product and highlight variant
   useEffect(() => {
     const productId = searchParams.get('productId');
@@ -67,10 +107,8 @@ export default function Products() {
       if (variantId) {
         setHighlightVariantId(Number(variantId));
         
-        // Clear highlight after 3 seconds
         const timer = setTimeout(() => {
           setHighlightVariantId(null);
-          // Clear URL params
           setSearchParams({});
         }, 3000);
 
@@ -118,6 +156,7 @@ export default function Products() {
       variantService.create(productId, data).then((r) => r.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productVariants", currentProductId] });
+      queryClient.invalidateQueries({ queryKey: ["allVariants"] });
       setShowVariantForm(false);
       setEditingVariant(null);
       toastCreate("Variant created successfully");
@@ -132,6 +171,7 @@ export default function Products() {
       variantService.update(variantId, data).then((r) => r.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productVariants", currentProductId] });
+      queryClient.invalidateQueries({ queryKey: ["allVariants"] });
       setShowVariantForm(false);
       setEditingVariant(null);
       toastUpdate("Variant updated successfully");
@@ -145,6 +185,7 @@ export default function Products() {
     mutationFn: (variantId: number) => variantService.remove(variantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productVariants", currentProductId] });
+      queryClient.invalidateQueries({ queryKey: ["allVariants"] });
       toastDelete("Variant deleted!");
     },
   });
@@ -195,14 +236,21 @@ export default function Products() {
     deleteVariant.mutate(id);
   };
 
+  const displayProducts = searchQuery ? filteredVariants.products : products;
+  const displayVariants = searchQuery ? filteredVariants.variants.filter(v => v.productId === currentProductId) : variants;
+
   // -------------------- Render --------------------
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage products and variants</p>
+          <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Products
+          </h1>
+          <p className={`text-sm mt-1 ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Manage products and variants
+          </p>
         </div>
 
         <Button
@@ -210,77 +258,136 @@ export default function Products() {
             setEditingProduct(null);
             setShowProductForm(true);
           }}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
         >
           <Plus className="w-4 h-4 mr-2" /> New Product
         </Button>
+      </div>
+
+      {/* Search Section */}
+      <div className={`mb-6 p-4 rounded-xl ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-stone-200'} shadow-sm`}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search variants by color, size, or SKU..."
+              className={`w-full pl-10 pr-10 py-2.5 rounded-lg text-sm transition-all
+                ${darkMode 
+                  ? 'bg-neutral-700 border border-neutral-600 text-white placeholder-[#A39180] focus:border-[#8B7355] focus:ring-2 focus:ring-[#8B7355]/20' 
+                  : 'bg-white border border-stone-300 text-slate-900 placeholder-slate-400 focus:border-[#8B7355] focus:ring-2 focus:ring-[#8B7355]/20'
+                } focus:outline-none`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-[#A39180] hover:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Dropdown */}
+          <div className="relative">
+            <select
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value as any)}
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all appearance-none pr-10 cursor-pointer
+                ${darkMode 
+                  ? 'bg-neutral-700 border border-neutral-600 text-white hover:bg-neutral-600' 
+                  : 'bg-white border border-stone-300 text-slate-700 hover:bg-stone-50'
+                } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/20`}
+            >
+              <option value="all">All Fields</option>
+              <option value="color">Color</option>
+              <option value="size">Size</option>
+              <option value="sku">SKU</option>
+            </select>
+            <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
+          </div>
+        </div>
+
+        {/* Search Results Info */}
+        {searchQuery && (
+          <div className={`mt-3 text-sm ${darkMode ? 'text-[#A39180]' : 'text-slate-600'}`}>
+            Found {displayProducts.length} product{displayProducts.length === 1 ? '' : 's'} with {filteredVariants.variants.length} matching variant{filteredVariants.variants.length === 1 ? '' : 's'}
+          </div>
+        )}
       </div>
 
       {/* Loading State */}
       {loadingProducts ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-500">Loading products...</p>
+            <div className={`w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4 ${darkMode ? 'border-neutral-700 border-t-[#8B7355]' : 'border-stone-200 border-t-[#8B7355]'}`}></div>
+            <p className={darkMode ? 'text-[#A39180]' : 'text-slate-500'}>Loading products...</p>
           </div>
         </div>
-      ) : products.length === 0 ? (
+      ) : displayProducts.length === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-            <Inbox className="w-8 h-8 text-slate-400" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${darkMode ? 'bg-neutral-800' : 'bg-slate-100'}`}>
+            <Inbox className={`w-8 h-8 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No products yet</h3>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm">
-            Start by creating your first product and adding variants.
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            {searchQuery ? 'No matching products' : 'No products yet'}
+          </h3>
+          <p className={`text-sm mb-6 max-w-sm ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            {searchQuery ? 'Try adjusting your search terms' : 'Start by creating your first product and adding variants.'}
           </p>
-          <Button
-            onClick={() => {
-              setEditingProduct(null);
-              setShowProductForm(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Create First Product
-          </Button>
+          {!searchQuery && (
+            <Button
+              onClick={() => {
+                setEditingProduct(null);
+                setShowProductForm(true);
+              }}
+              className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Create First Product
+            </Button>
+          )}
         </div>
       ) : (
         <>
           {/* Desktop Table View - Hidden on mobile */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className={`hidden md:block rounded-xl shadow-sm overflow-hidden ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className={darkMode ? 'bg-neutral-900 border-b border-neutral-700' : 'bg-slate-50 border-b border-slate-200'}>
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                     Product
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                     Type
                   </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                {products.map((product) => (
+              <tbody className={darkMode ? 'divide-y divide-neutral-700' : 'divide-y divide-slate-200'}>
+                {displayProducts.map((product) => (
                   <React.Fragment key={product.productId}>
                     {/* Product Row */}
                     <tr
-                      className="hover:bg-slate-50 transition-colors cursor-pointer"
+                      className={`transition-colors cursor-pointer ${darkMode ? 'hover:bg-neutral-700' : 'hover:bg-slate-50'}`}
                       onClick={() => handleRowClick(product)}
                     >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center">
                           {expandedProductId === product.productId ? (
-                            <ChevronDown className="w-4 h-4 text-slate-400 mr-2" />
+                            <ChevronDown className={`w-4 h-4 mr-2 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
                           ) : (
-                            <ChevronRight className="w-4 h-4 text-slate-400 mr-2" />
+                            <ChevronRight className={`w-4 h-4 mr-2 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
                           )}
-                          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
-                            <Package className="w-4 h-4 text-purple-600" />
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${darkMode ? 'bg-[#8B7355]/20' : 'bg-purple-100'}`}>
+                            <Package className={`w-4 h-4 ${darkMode ? 'text-[#E8DDD0]' : 'text-purple-600'}`} />
                           </div>
-                          <div className="text-sm font-medium text-slate-900">
+                          <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                             {product.productName}
                           </div>
                         </div>
@@ -300,7 +407,7 @@ export default function Products() {
                               setEditingProduct(product);
                               setShowProductForm(true);
                             }}
-                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                            className={darkMode ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'}
                             aria-label="Edit product"
                           >
                             <Pencil className="w-4 h-4" />
@@ -324,10 +431,10 @@ export default function Products() {
                     {/* Expanded Variants Section */}
                     {expandedProductId === product.productId && (
                       <tr>
-                        <td colSpan={3} className="px-4 py-4 bg-slate-50">
+                        <td colSpan={3} className={`px-4 py-4 ${darkMode ? 'bg-neutral-900' : 'bg-slate-50'}`}>
                           <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                              <h3 className="text-sm font-semibold text-slate-700">Variants</h3>
+                              <h3 className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-700'}`}>Variants</h3>
                               <Button
                                 size="sm"
                                 onClick={(e) => {
@@ -336,19 +443,21 @@ export default function Products() {
                                   setEditingVariant(null);
                                   setShowVariantForm(true);
                                 }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
                               >
                                 <Plus className="w-3 h-3 mr-1" /> Add Variant
                               </Button>
                             </div>
 
                             {loadingVariants ? (
-                              <p className="text-xs text-slate-400 text-center py-4">Loading variants...</p>
-                            ) : variants.length === 0 ? (
-                              <p className="text-xs text-slate-400 text-center py-4">No variants yet</p>
+                              <p className={`text-xs text-center py-4 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>Loading variants...</p>
+                            ) : displayVariants.length === 0 ? (
+                              <p className={`text-xs text-center py-4 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
+                                {searchQuery ? 'No matching variants' : 'No variants yet'}
+                              </p>
                             ) : (
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {variants.map((v) => (
+                                {displayVariants.map((v) => (
                                   <VariantCard
                                     key={v.productVariantId}
                                     variant={v}
@@ -374,29 +483,20 @@ export default function Products() {
 
           {/* Mobile Card View - Hidden on desktop */}
           <div className="md:hidden space-y-3">
-            {products.map((product) => (
-              <div key={product.productId} className="bg-white rounded-xl shadow-sm border border-slate-200">
+            {displayProducts.map((product) => (
+              <div key={product.productId} className={`rounded-xl shadow-sm ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
                 {/* Product Header */}
                 <button
                   className="w-full p-4 text-left"
                   onClick={() => handleRowClick(product)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleRowClick(product);
-                    }
-                  }}
-                  tabIndex={0}
-                  aria-expanded={expandedProductId === product.productId}
-                  aria-label={`${product.productName} - Click to view variants`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-purple-600" />
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${darkMode ? 'bg-[#8B7355]/20' : 'bg-purple-100'}`}>
+                        <Package className={`w-5 h-5 ${darkMode ? 'text-[#E8DDD0]' : 'text-purple-600'}`} />
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-slate-900">
+                        <div className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                           {product.productName}
                         </div>
                         <Badge className={`${PRODUCT_TYPE_BADGES[product.productType]} mt-1`}>
@@ -404,9 +504,9 @@ export default function Products() {
                         </Badge>
                       </div>
                       {expandedProductId === product.productId ? (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                        <ChevronDown className={`w-5 h-5 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
                       ) : (
-                        <ChevronRight className="w-5 h-5 text-slate-400" />
+                        <ChevronRight className={`w-5 h-5 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
                       )}
                     </div>
                   </div>
@@ -421,7 +521,7 @@ export default function Products() {
                         setEditingProduct(product);
                         setShowProductForm(true);
                       }}
-                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-8 w-8"
+                      className={`h-8 w-8 ${darkMode ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'}`}
                       aria-label="Edit product"
                     >
                       <Pencil className="w-4 h-4" />
@@ -443,10 +543,10 @@ export default function Products() {
 
                 {/* Expanded Variants Section */}
                 {expandedProductId === product.productId && (
-                  <div className="border-t border-slate-200 p-4 bg-slate-50">
+                  <div className={`border-t p-4 ${darkMode ? 'border-neutral-700 bg-neutral-900' : 'border-slate-200 bg-slate-50'}`}>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-slate-700">Variants</h3>
+                        <h3 className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-700'}`}>Variants</h3>
                         <Button
                           size="sm"
                           onClick={() => {
@@ -454,19 +554,21 @@ export default function Products() {
                             setEditingVariant(null);
                             setShowVariantForm(true);
                           }}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
                         >
                           <Plus className="w-3 h-3 mr-1" /> Add
                         </Button>
                       </div>
 
                       {loadingVariants ? (
-                        <p className="text-xs text-slate-400 text-center py-4">Loading variants...</p>
-                      ) : variants.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-4">No variants yet</p>
+                        <p className={`text-xs text-center py-4 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>Loading variants...</p>
+                      ) : displayVariants.length === 0 ? (
+                        <p className={`text-xs text-center py-4 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
+                          {searchQuery ? 'No matching variants' : 'No variants yet'}
+                        </p>
                       ) : (
                         <div className="space-y-2">
-                          {variants.map((v) => (
+                          {displayVariants.map((v) => (
                             <VariantCard
                               key={v.productVariantId}
                               variant={v}
@@ -491,9 +593,9 @@ export default function Products() {
 
       {/* Product Dialog */}
       <Dialog open={showProductForm} onOpenChange={setShowProductForm}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`sm:max-w-md max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'}`}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
               {editingProduct ? "Edit Product" : "New Product"}
             </DialogTitle>
           </DialogHeader>
@@ -512,9 +614,9 @@ export default function Products() {
 
       {/* Variant Dialog */}
       <Dialog open={showVariantForm} onOpenChange={setShowVariantForm}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`sm:max-w-md max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'}`}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
               {editingVariant ? "Edit Variant" : "New Variant"}
             </DialogTitle>
           </DialogHeader>

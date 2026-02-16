@@ -11,16 +11,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTheme } from "@/ThemeContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
 
   const { data: productsRes = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["products"],
     queryFn: () => productService.list().then((r) => r.data.data),
   });
-  const products = Array.isArray(productsRes) ?
-   productsRes : [];
+  const products = Array.isArray(productsRes) ? productsRes : [];
 
   const { data: variantsRes = [], isLoading: loadingVariants } = useQuery({
     queryKey: ["variants"],
@@ -42,22 +43,16 @@ export default function Dashboard() {
   const purchases = allPurchases.slice(0, 5);
 
   const { data: salesRes = [], isLoading: loadingSales, error: salesError } = useQuery({
-  queryKey: ["sales"],
-  queryFn: async () => {
-    const response = await saleService.list();
-    
-    // The response IS the array, not wrapped in .data.data
-    // Check if response has .data property, otherwise use response directly
-    if (response) {
+    queryKey: ["sales"],
+    queryFn: async () => {
+      const response = await saleService.list();
+      if (response) {
+        return Array.isArray(response) ? response : [];
+      }
       return Array.isArray(response) ? response : [];
-    }
-    
-    return Array.isArray(response) ? response : [];
-  },
-});
+    },
+  });
 
-  // Log the sales data we got
-  
   const allSales = Array.isArray(salesRes) ? salesRes : [];
   const sales = allSales.slice(0, 5);
 
@@ -82,33 +77,45 @@ export default function Dashboard() {
     <div className="px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Overview of your inventory and transactions</p>
+        <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+          Dashboard
+        </h1>
+        <p className={`text-sm mt-1 ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+          Overview of your inventory and transactions
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p className="text-sm text-slate-500 font-medium">Products</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
+        <div className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
+          <p className={`text-sm font-medium ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Products
+          </p>
+          <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {isLoading ? "..." : products.length}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p className="text-sm text-slate-500 font-medium">Total Stock</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
+        <div className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
+          <p className={`text-sm font-medium ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Total Stock
+          </p>
+          <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {isLoading ? "..." : totalStock.toLocaleString()}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p className="text-sm text-slate-500 font-medium">Suppliers</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
+        <div className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
+          <p className={`text-sm font-medium ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Suppliers
+          </p>
+          <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {isLoading ? "..." : suppliers.length}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p className="text-sm text-slate-500 font-medium">Revenue</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
+        <div className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}>
+          <p className={`text-sm font-medium ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Revenue
+          </p>
+          <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {isLoading ? "..." : `£${totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
           </p>
         </div>
@@ -121,25 +128,27 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+          className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
               Recent Sales
             </h2>
             <Link
               to={createPageUrl("Sales")}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+              className={`text-sm font-medium flex items-center gap-1 ${darkMode ? 'text-[#E8DDD0] hover:text-white' : 'text-indigo-600 hover:text-indigo-800'}`}
             >
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           {loadingSales ? (
-            <p className="text-sm text-slate-400 py-6 text-center">Loading...</p>
+            <p className={`text-sm py-6 text-center ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
+              Loading...
+            </p>
           ) : salesError ? (
             <p className="text-sm text-red-500 py-6 text-center">Error loading sales</p>
           ) : sales.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">
+            <p className={`text-sm py-6 text-center ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
               No sales yet
             </p>
           ) : (
@@ -148,13 +157,17 @@ export default function Dashboard() {
                 <button
                   key={sale.saleId}
                   onClick={() => handleSaleClick(sale.saleId)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer text-left"
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors cursor-pointer text-left ${
+                    darkMode 
+                      ? 'bg-neutral-700 hover:bg-neutral-600' 
+                      : 'bg-slate-50 hover:bg-slate-100'
+                  }`}
                 >
                   <div>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-700'}`}>
                       {sale.customerName || "Walk-in"}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className={`text-xs ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                       {sale.saleDate
                         ? format(new Date(sale.saleDate), "MMM d, yyyy")
                         : "—"}
@@ -174,23 +187,25 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+          className={`rounded-xl shadow-sm p-6 ${darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'}`}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
               Recent Purchases
             </h2>
             <Link
               to={createPageUrl("Purchases")}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+              className={`text-sm font-medium flex items-center gap-1 ${darkMode ? 'text-[#E8DDD0] hover:text-white' : 'text-indigo-600 hover:text-indigo-800'}`}
             >
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           {loadingPurchases ? (
-            <p className="text-sm text-slate-400 py-6 text-center">Loading...</p>
+            <p className={`text-sm py-6 text-center ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
+              Loading...
+            </p>
           ) : purchases.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">
+            <p className={`text-sm py-6 text-center ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`}>
               No purchases yet
             </p>
           ) : (
@@ -199,19 +214,23 @@ export default function Dashboard() {
                 <button
                   key={purchase.purchaseId}
                   onClick={() => handlePurchaseClick(purchase.purchaseId)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer text-left"
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors cursor-pointer text-left ${
+                    darkMode 
+                      ? 'bg-neutral-700 hover:bg-neutral-600' 
+                      : 'bg-slate-50 hover:bg-slate-100'
+                  }`}
                 >
                   <div>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-700'}`}>
                       {purchase.supplier?.supplierName || `Purchase #${purchase.purchaseId}`}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className={`text-xs ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                       {purchase.purchaseDate
                         ? format(new Date(purchase.purchaseDate), "MMM d, yyyy")
                         : "—"}
                     </p>
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                     £{(purchase.totalAmount || 0).toFixed(2)}
                   </span>
                 </button>
@@ -227,9 +246,13 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-6"
+          className={`mt-6 rounded-xl p-6 ${
+            darkMode 
+              ? 'bg-amber-900/20 border border-amber-700/50' 
+              : 'bg-amber-50 border border-amber-200'
+          }`}
         >
-          <h3 className="text-lg font-semibold text-amber-800 mb-3">
+          <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-amber-400' : 'text-amber-800'}`}>
             Low Stock Alert
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -239,14 +262,20 @@ export default function Dashboard() {
                 <button
                   key={v.productVariantId}
                   type="button"
-                  className="bg-white rounded-xl p-3 border border-amber-200 hover:border-amber-300 hover:bg-amber-50 transition-all text-left w-full"
+                  className={`rounded-xl p-3 border transition-all text-left w-full ${
+                    darkMode
+                      ? 'bg-neutral-800 border-amber-700/50 hover:border-amber-600 hover:bg-neutral-700'
+                      : 'bg-white border-amber-200 hover:border-amber-300 hover:bg-amber-50'
+                  }`}
                   onClick={() => handleVariantClick(v)}
                 >
-                  <p className="text-sm font-medium text-slate-700">{v.sku}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-700'}`}>
+                    {v.sku}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                     {v.color} - Size {v.size}
                   </p>
-                  <p className="text-sm font-bold text-amber-600 mt-1">
+                  <p className={`text-sm font-bold mt-1 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>
                     {v.quantity} left
                   </p>
                 </button>

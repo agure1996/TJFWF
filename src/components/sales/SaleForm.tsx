@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { saleService } from "@/api/services/saleService";
 import type { SaleFormItem, CreateSaleRequest } from "@/api/types";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ChevronDown } from "lucide-react";
 import { toastError } from "@/components/ui/toastHelper";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/ThemeContext";
 
 interface SaleFormProps {
   initialData?: {
@@ -23,7 +24,8 @@ const VariantPreview: React.FC<{
   control: any;
   index: number;
   variants: { id: number; name: string; details: string }[];
-}> = ({ control, index, variants }) => {
+  darkMode: boolean;
+}> = ({ control, index, variants, darkMode }) => {
   const variantId = useWatch({
     control,
     name: `items.${index}.productVariantId`,
@@ -33,7 +35,11 @@ const VariantPreview: React.FC<{
   if (!selectedVariant || variantId === 0) return null;
   
   return (
-    <div className="text-xs text-slate-500 pl-3 py-1 bg-slate-50 rounded border border-slate-100">
+    <div className={`text-xs px-3 py-2 rounded-lg border ${
+      darkMode 
+        ? 'bg-neutral-700 border-neutral-600 text-[#A39180]' 
+        : 'bg-slate-50 border-slate-200 text-slate-600'
+    }`}>
       {selectedVariant.name} — {selectedVariant.details}
     </div>
   );
@@ -45,6 +51,7 @@ export const SaleForm: React.FC<SaleFormProps> = ({
   onCancel,
   className = ""
 }) => {
+  const { darkMode } = useTheme();
   const { control, handleSubmit, reset } = useForm({
     defaultValues: initialData || {
       saleDate: new Date().toISOString().slice(0, 16),
@@ -94,7 +101,9 @@ export const SaleForm: React.FC<SaleFormProps> = ({
       {/* Customer Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex flex-col">
-          <label htmlFor="customerName" className="text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="customerName" className={`text-sm font-medium mb-1.5 ${
+            darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+          }`}>
             Customer Name
           </label>
           <Controller
@@ -105,14 +114,20 @@ export const SaleForm: React.FC<SaleFormProps> = ({
                 id="customerName"
                 {...field}
                 placeholder="Optional"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+                  darkMode 
+                    ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' 
+                    : 'bg-white border-stone-300 text-slate-900 placeholder-slate-400'
+                } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
               />
             )}
           />
         </div>
 
         <div className="flex flex-col">
-          <label htmlFor="customerContact" className="text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="customerContact" className={`text-sm font-medium mb-1.5 ${
+            darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+          }`}>
             Customer Contact
           </label>
           <Controller
@@ -123,7 +138,11 @@ export const SaleForm: React.FC<SaleFormProps> = ({
                 id="customerContact"
                 {...field}
                 placeholder="Optional"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+                  darkMode 
+                    ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' 
+                    : 'bg-white border-stone-300 text-slate-900 placeholder-slate-400'
+                } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
               />
             )}
           />
@@ -132,7 +151,9 @@ export const SaleForm: React.FC<SaleFormProps> = ({
 
       {/* Sale Date */}
       <div className="flex flex-col mb-4">
-        <label htmlFor="saleDate" className="text-sm font-medium text-slate-700 mb-1.5">
+        <label htmlFor="saleDate" className={`text-sm font-medium mb-1.5 ${
+          darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+        }`}>
           Sale Date
         </label>
         <Controller
@@ -143,7 +164,11 @@ export const SaleForm: React.FC<SaleFormProps> = ({
               id="saleDate"
               type="datetime-local"
               {...field}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+                darkMode 
+                  ? 'bg-neutral-700 border-neutral-600 text-white' 
+                  : 'bg-white border-stone-300 text-slate-900'
+              } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
             />
           )}
         />
@@ -152,13 +177,19 @@ export const SaleForm: React.FC<SaleFormProps> = ({
       {/* Items Section */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium text-slate-700">Items</label>
+          <label className={`text-sm font-medium ${darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'}`}>
+            Items
+          </label>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => append({ productVariantId: 0, quantity: 1, salePrice: 0 })}
-            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-sm"
+            className={`text-sm ${
+              darkMode 
+                ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' 
+                : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+            }`}
           >
             <Plus className="w-4 h-4 mr-1" /> Add Item
           </Button>
@@ -169,33 +200,46 @@ export const SaleForm: React.FC<SaleFormProps> = ({
             <div key={item.id} className="space-y-2">
               {/* Product Variant */}
               <div className="flex flex-col">
-                <label htmlFor={`item-${index}-variant`} className="text-xs font-medium text-slate-600 mb-1">
+                <label htmlFor={`item-${index}-variant`} className={`text-xs font-medium mb-1 ${
+                  darkMode ? 'text-[#A39180]' : 'text-slate-600'
+                }`}>
                   Variant
                 </label>
-                <Controller
-                  name={`items.${index}.productVariantId`}
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      id={`item-${index}-variant`}
-                      {...field}
-                      className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
-                    >
-                      <option value={0}>Select variant</option>
-                      {variants.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name} — {v.details}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                />
+                <div className="relative">
+                  <Controller
+                    name={`items.${index}.productVariantId`}
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        id={`item-${index}-variant`}
+                        {...field}
+                        className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm appearance-none cursor-pointer transition-all ${
+                          darkMode 
+                            ? 'bg-neutral-700 border-neutral-600 text-white' 
+                            : 'bg-white border-stone-300 text-slate-900'
+                        } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
+                      >
+                        <option value={0}>Select variant</option>
+                        {variants.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name} — {v.details}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                    darkMode ? 'text-neutral-400' : 'text-slate-400'
+                  }`} />
+                </div>
               </div>
 
               {/* Quantity and Price */}
               <div className="flex items-end gap-2">
                 <div className="flex flex-col flex-1">
-                  <label htmlFor={`item-${index}-quantity`} className="text-xs font-medium text-slate-600 mb-1">
+                  <label htmlFor={`item-${index}-quantity`} className={`text-xs font-medium mb-1 ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-600'
+                  }`}>
                     Qty
                   </label>
                   <Controller
@@ -207,14 +251,20 @@ export const SaleForm: React.FC<SaleFormProps> = ({
                         type="number"
                         min={1}
                         {...field}
-                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+                          darkMode 
+                            ? 'bg-neutral-700 border-neutral-600 text-white' 
+                            : 'bg-white border-stone-300 text-slate-900'
+                        } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
                       />
                     )}
                   />
                 </div>
 
                 <div className="flex flex-col flex-1">
-                  <label htmlFor={`item-${index}-price`} className="text-xs font-medium text-slate-600 mb-1">
+                  <label htmlFor={`item-${index}-price`} className={`text-xs font-medium mb-1 ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-600'
+                  }`}>
                     Price (£)
                   </label>
                   <Controller
@@ -227,7 +277,11 @@ export const SaleForm: React.FC<SaleFormProps> = ({
                         min={0}
                         step={0.01}
                         {...field}
-                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+                          darkMode 
+                            ? 'bg-neutral-700 border-neutral-600 text-white' 
+                            : 'bg-white border-stone-300 text-slate-900'
+                        } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
                       />
                     )}
                   />
@@ -247,10 +301,10 @@ export const SaleForm: React.FC<SaleFormProps> = ({
               </div>
 
               {/* Selected variant details */}
-              <VariantPreview control={control} index={index} variants={variants} />
+              <VariantPreview control={control} index={index} variants={variants} darkMode={darkMode} />
 
               {index < fields.length - 1 && (
-                <div className="border-t border-slate-100 pt-2" />
+                <div className={`border-t pt-2 ${darkMode ? 'border-neutral-700' : 'border-slate-100'}`} />
               )}
             </div>
           ))}
@@ -258,18 +312,23 @@ export const SaleForm: React.FC<SaleFormProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+      <div className={`flex justify-end gap-3 pt-4 border-t ${
+        darkMode ? 'border-neutral-700' : 'border-slate-200'
+      }`}>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onCancel}
-          className="px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+          className={darkMode 
+            ? 'text-[#A39180] hover:text-white hover:bg-neutral-700' 
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }
         >
           Cancel
         </Button>
         <Button
           type="submit"
-          className="px-6 bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="bg-[#8B7355] hover:bg-[#7A6854] text-white"
         >
           {initialData ? "Update Sale" : "Create Sale"}
         </Button>

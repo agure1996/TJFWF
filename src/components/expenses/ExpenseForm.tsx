@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import { useTheme } from "@/ThemeContext";
 
 const EXPENSE_TYPES = ["RENT", "ELECTRICITY", "WATER", "INSURANCE", "MARKETING", "SUPPLIES", "OTHER"];
 
@@ -12,7 +14,6 @@ type ExpenseFormProps = {
     expenseDate: string;
     notes?: string;
   };
-
   onSubmit: (data: {
     expenseName: string;
     expenseType: string;
@@ -20,7 +21,6 @@ type ExpenseFormProps = {
     expenseDate: string;
     notes?: string;
   }) => void;
-
   onCancel: () => void;
   isLoading?: boolean;
 };
@@ -31,6 +31,8 @@ export default function ExpenseForm({
   onCancel,
   isLoading,
 }: Readonly<ExpenseFormProps>) {
+  const { darkMode } = useTheme();
+  
   const [form, setForm] = useState({
     expenseName: "",
     expenseType: "RENT",
@@ -68,7 +70,9 @@ export default function ExpenseForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Expense Name */}
       <div className="flex flex-col">
-        <label htmlFor="expenseName" className="text-sm font-medium text-slate-700 mb-1.5">
+        <label htmlFor="expenseName" className={`text-sm font-medium mb-1.5 ${
+          darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+        }`}>
           Expense Name
         </label>
         <input
@@ -78,33 +82,50 @@ export default function ExpenseForm({
           onChange={(e) => setForm({ ...form, expenseName: e.target.value })}
           placeholder="e.g. Monthly Rent"
           required
-          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+            darkMode 
+              ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' 
+              : 'bg-white border-stone-300 text-slate-900 placeholder-slate-400'
+          } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
         />
       </div>
 
       {/* Type and Amount - Two Column Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label htmlFor="expenseType" className="text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="expenseType" className={`text-sm font-medium mb-1.5 ${
+            darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+          }`}>
             Type
           </label>
-          <select
-            id="expenseType"
-            value={form.expenseType}
-            onChange={(e) => setForm({ ...form, expenseType: e.target.value })}
-            required
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
-          >
-            {EXPENSE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t.charAt(0) + t.slice(1).toLowerCase()}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="expenseType"
+              value={form.expenseType}
+              onChange={(e) => setForm({ ...form, expenseType: e.target.value })}
+              required
+              className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm appearance-none cursor-pointer transition-all ${
+                darkMode 
+                  ? 'bg-neutral-700 border-neutral-600 text-white' 
+                  : 'bg-white border-stone-300 text-slate-900'
+              } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
+            >
+              {EXPENSE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t.charAt(0) + t.slice(1).toLowerCase()}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+              darkMode ? 'text-neutral-400' : 'text-slate-400'
+            }`} />
+          </div>
         </div>
 
         <div className="flex flex-col">
-          <label htmlFor="amount" className="text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="amount" className={`text-sm font-medium mb-1.5 ${
+            darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+          }`}>
             Amount (£)
           </label>
           <input
@@ -116,14 +137,20 @@ export default function ExpenseForm({
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
             placeholder="0.00"
             required
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+              darkMode 
+                ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' 
+                : 'bg-white border-stone-300 text-slate-900 placeholder-slate-400'
+            } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
           />
         </div>
       </div>
 
       {/* Date */}
       <div className="flex flex-col">
-        <label htmlFor="expenseDate" className="text-sm font-medium text-slate-700 mb-1.5">
+        <label htmlFor="expenseDate" className={`text-sm font-medium mb-1.5 ${
+          darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+        }`}>
           Date
         </label>
         <input
@@ -132,13 +159,19 @@ export default function ExpenseForm({
           value={form.expenseDate}
           onChange={(e) => setForm({ ...form, expenseDate: e.target.value })}
           required
-          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          className={`border rounded-lg px-3 py-2 text-sm transition-all ${
+            darkMode 
+              ? 'bg-neutral-700 border-neutral-600 text-white' 
+              : 'bg-white border-stone-300 text-slate-900'
+          } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
         />
       </div>
 
       {/* Notes */}
       <div className="flex flex-col">
-        <label htmlFor="notes" className="text-sm font-medium text-slate-700 mb-1.5">
+        <label htmlFor="notes" className={`text-sm font-medium mb-1.5 ${
+          darkMode ? 'text-[#E8DDD0]' : 'text-slate-700'
+        }`}>
           Notes
         </label>
         <textarea
@@ -147,24 +180,33 @@ export default function ExpenseForm({
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           placeholder="Optional notes..."
           rows={3}
-          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+          className={`border rounded-lg px-3 py-2 text-sm resize-none transition-all ${
+            darkMode 
+              ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' 
+              : 'bg-white border-stone-300 text-slate-900 placeholder-slate-400'
+          } focus:outline-none focus:ring-2 focus:ring-[#8B7355]/30 focus:border-[#8B7355]`}
         />
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+      <div className={`flex justify-end gap-3 pt-4 border-t ${
+        darkMode ? 'border-neutral-700' : 'border-slate-200'
+      }`}>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onCancel}
-          className="px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+          className={darkMode 
+            ? 'text-[#A39180] hover:text-white hover:bg-neutral-700' 
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="px-6 bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="bg-[#8B7355] hover:bg-[#7A6854] text-white disabled:opacity-50"
         >
           {expense ? "Update Expense" : "Create Expense"}
         </Button>

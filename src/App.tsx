@@ -6,6 +6,7 @@ import { pagesConfig, type PageKey } from "./pages.config";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
+import { ThemeProvider } from "./ThemeContext";
 import UserNotRegisteredError from "./components/UserNotRegisteredError";
 import type { ComponentType, ReactNode } from "react";
 
@@ -78,15 +79,17 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster richColors position="top-right" />{" "}
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider> {/* WRAP EVERYTHING IN ThemeProvider */}
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster richColors position="top-right" />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider> 
   );
 }
 

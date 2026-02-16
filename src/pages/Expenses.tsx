@@ -7,7 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Pencil, Trash2, Wallet, Inbox } from "lucide-react";
 import { format } from "date-fns";
 import ExpenseForm from "@/components/expenses/ExpenseForm";
-import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
+import { useTheme } from "@/ThemeContext";
+import { useToastHelper } from "@/components/ui/toastHelper";
+
 
 const TYPE_COLORS = {
   RENT: "bg-violet-100 text-violet-700",
@@ -17,6 +19,16 @@ const TYPE_COLORS = {
   MARKETING: "bg-pink-100 text-pink-700",
   SUPPLIES: "bg-emerald-100 text-emerald-700",
   OTHER: "bg-slate-100 text-slate-600",
+} as const;
+
+const TYPE_COLORS_DARK = {
+  RENT: "bg-violet-900/20 text-violet-300",
+  ELECTRICITY: "bg-amber-900/20 text-amber-300",
+  WATER: "bg-sky-900/20 text-sky-300",
+  INSURANCE: "bg-indigo-900/20 text-indigo-300",
+  MARKETING: "bg-pink-900/20 text-pink-300",
+  SUPPLIES: "bg-emerald-900/20 text-emerald-300",
+  OTHER: "bg-neutral-700 text-[#A39180]",
 } as const;
 
 // API response type
@@ -37,7 +49,9 @@ type KnownExpenseType = keyof typeof TYPE_COLORS;
 
 export default function Expenses() {
   const queryClient = useQueryClient();
-
+  const { darkMode } = useTheme();
+  const { toastCreate, toastUpdate, toastDelete, toastError } = useToastHelper();
+  
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ExpenseType | undefined>(undefined);
 
@@ -109,13 +123,22 @@ export default function Expenses() {
     deleteExpense.mutate(id);
   };
 
+  const getBadgeColor = (type: string) => {
+    const typeKey = type as KnownExpenseType;
+    return darkMode ? TYPE_COLORS_DARK[typeKey] || TYPE_COLORS_DARK.OTHER : TYPE_COLORS[typeKey] || TYPE_COLORS.OTHER;
+  };
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Expenses</h1>
-          <p className="text-sm text-slate-500 mt-1">Track operational costs</p>
+          <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Expenses
+          </h1>
+          <p className={`text-sm mt-1 ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Track operational costs
+          </p>
         </div>
 
         <Button
@@ -123,7 +146,7 @@ export default function Expenses() {
             setEditing(undefined);
             setShowForm(true);
           }}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
         >
           <Plus className="w-4 h-4 mr-2" /> New Expense
         </Button>
@@ -133,18 +156,24 @@ export default function Expenses() {
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-500">Loading expenses...</p>
+            <div className={`w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4 ${
+              darkMode ? 'border-neutral-700 border-t-[#8B7355]' : 'border-stone-200 border-t-[#8B7355]'
+            }`}></div>
+            <p className={darkMode ? 'text-[#A39180]' : 'text-slate-500'}>Loading expenses...</p>
           </div>
         </div>
       ) : expenses.length === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-            <Inbox className="w-8 h-8 text-slate-400" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+            darkMode ? 'bg-neutral-800' : 'bg-slate-100'
+          }`}>
+            <Inbox className={`w-8 h-8 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No expenses yet</h3>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm">
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            No expenses yet
+          </h3>
+          <p className={`text-sm mb-6 max-w-sm ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
             Track operational costs like rent, electricity, and more.
           </p>
           <Button
@@ -152,7 +181,7 @@ export default function Expenses() {
               setEditing(undefined);
               setShowForm(true);
             }}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
           >
             <Plus className="w-4 h-4 mr-2" /> Create First Expense
           </Button>
@@ -160,63 +189,77 @@ export default function Expenses() {
       ) : (
         <>
           {/* Desktop Table View - Hidden on mobile */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className={`hidden md:block rounded-xl shadow-sm overflow-hidden ${
+            darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'
+          }`}>
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className={darkMode ? 'bg-neutral-900 border-b border-neutral-700' : 'bg-slate-50 border-b border-slate-200'}>
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Expense
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Type
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Date
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Amount
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Notes
                   </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className={darkMode ? 'divide-y divide-neutral-700' : 'divide-y divide-slate-200'}>
                 {expenses.map((expense) => (
                   <tr
                     key={expense.id}
-                    className="hover:bg-slate-50 transition-colors"
+                    className={`transition-colors ${darkMode ? 'hover:bg-neutral-700' : 'hover:bg-slate-50'}`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center mr-3">
-                          <Wallet className="w-4 h-4 text-rose-600" />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
+                          darkMode ? 'bg-rose-900/20' : 'bg-rose-100'
+                        }`}>
+                          <Wallet className={`w-4 h-4 ${darkMode ? 'text-rose-400' : 'text-rose-600'}`} />
                         </div>
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                           {expense.expenseName}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <Badge className={`text-xs ${TYPE_COLORS[expense.expenseType as KnownExpenseType] || "bg-slate-100 text-slate-600"}`}>
+                      <Badge className={`text-xs ${getBadgeColor(expense.expenseType)}`}>
                         {expense.expenseType}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">
-                        {expense.expenseDate ? format(new Date(expense.expenseDate), "MMM d, yyyy") : "—"}
-                      </div>
+                    <td className={`px-4 py-3 whitespace-nowrap text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {expense.expenseDate ? format(new Date(expense.expenseDate), "MMM d, yyyy") : "—"}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-rose-600">
+                      <div className={`text-sm font-semibold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>
                         £{(expense.amount || 0).toFixed(2)}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm text-slate-500 truncate max-w-xs">
+                      <div className={`text-sm truncate max-w-xs ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                         {expense.notes || "—"}
                       </div>
                     </td>
@@ -229,7 +272,10 @@ export default function Expenses() {
                             setEditing(expense);
                             setShowForm(true);
                           }}
-                          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                          className={darkMode 
+                            ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' 
+                            : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                          }
                           aria-label="Edit expense"
                         >
                           <Pencil className="w-4 h-4" />
@@ -256,19 +302,25 @@ export default function Expenses() {
             {expenses.map((expense) => (
               <div
                 key={expense.id}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+                className={`rounded-xl shadow-sm border p-4 ${
+                  darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-slate-200'
+                }`}
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
-                      <Wallet className="w-5 h-5 text-rose-600" />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      darkMode ? 'bg-rose-900/20' : 'bg-rose-100'
+                    }`}>
+                      <Wallet className={`w-5 h-5 ${darkMode ? 'text-rose-400' : 'text-rose-600'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-slate-900 truncate">
+                      <div className={`text-sm font-semibold truncate ${
+                        darkMode ? 'text-white' : 'text-slate-900'
+                      }`}>
                         {expense.expenseName}
                       </div>
-                      <Badge className={`text-xs mt-1 ${TYPE_COLORS[expense.expenseType as KnownExpenseType] || "bg-slate-100 text-slate-600"}`}>
+                      <Badge className={`text-xs mt-1 ${getBadgeColor(expense.expenseType)}`}>
                         {expense.expenseType}
                       </Badge>
                     </div>
@@ -283,7 +335,11 @@ export default function Expenses() {
                         setEditing(expense);
                         setShowForm(true);
                       }}
-                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-8 w-8"
+                      className={`h-8 w-8 ${
+                        darkMode 
+                          ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' 
+                          : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                      }`}
                       aria-label="Edit expense"
                     >
                       <Pencil className="w-4 h-4" />
@@ -303,15 +359,17 @@ export default function Expenses() {
                 {/* Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500">
+                    <span className={darkMode ? 'text-[#A39180]' : 'text-slate-500'}>
                       {expense.expenseDate ? format(new Date(expense.expenseDate), "MMM d, yyyy") : "—"}
                     </span>
-                    <span className="font-semibold text-rose-600">
+                    <span className={`font-semibold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>
                       £{(expense.amount || 0).toFixed(2)}
                     </span>
                   </div>
                   {expense.notes && (
-                    <div className="text-slate-500 text-xs pt-2 border-t border-slate-100">
+                    <div className={`text-xs pt-2 border-t ${
+                      darkMode ? 'border-neutral-700 text-[#A39180]' : 'border-slate-100 text-slate-500'
+                    }`}>
                       {expense.notes}
                     </div>
                   )}
@@ -324,9 +382,13 @@ export default function Expenses() {
 
       {/* Modal */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`sm:max-w-md max-h-[90vh] overflow-y-auto ${
+          darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'
+        }`}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className={`text-xl font-semibold ${
+              darkMode ? 'text-white' : 'text-slate-900'
+            }`}>
               {editing ? "Edit Expense" : "New Expense"}
             </DialogTitle>
           </DialogHeader>

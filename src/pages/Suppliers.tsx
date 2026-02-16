@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Truck, Inbox } from "lucide-react";
 import SupplierForm from "../components/suppliers/SupplierForm";
-import { toastCreate, toastUpdate, toastDelete } from "@/components/ui/toastHelper";
+import { useTheme } from "@/ThemeContext";
+import { useToastHelper } from "@/components/ui/toastHelper";
 
 export default function Suppliers() {
   const queryClient = useQueryClient();
-
+  const { darkMode } = useTheme();
+  const { toastCreate, toastUpdate, toastDelete } = useToastHelper();  
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierDTO | null>(null);
 
@@ -69,8 +71,12 @@ export default function Suppliers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Suppliers</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage your supply chain contacts</p>
+          <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Suppliers
+          </h1>
+          <p className={`text-sm mt-1 ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+            Manage your supply chain contacts
+          </p>
         </div>
 
         <Button
@@ -78,7 +84,7 @@ export default function Suppliers() {
             setEditing(null);
             setShowForm(true);
           }}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
         >
           <Plus className="w-4 h-4 mr-2" /> New Supplier
         </Button>
@@ -88,18 +94,24 @@ export default function Suppliers() {
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-500">Loading suppliers...</p>
+            <div className={`w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4 ${
+              darkMode ? 'border-neutral-700 border-t-[#8B7355]' : 'border-stone-200 border-t-[#8B7355]'
+            }`}></div>
+            <p className={darkMode ? 'text-[#A39180]' : 'text-slate-500'}>Loading suppliers...</p>
           </div>
         </div>
       ) : suppliers.length === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-            <Inbox className="w-8 h-8 text-slate-400" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+            darkMode ? 'bg-neutral-800' : 'bg-slate-100'
+          }`}>
+            <Inbox className={`w-8 h-8 ${darkMode ? 'text-[#A39180]' : 'text-slate-400'}`} />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No suppliers yet</h3>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm">
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            No suppliers yet
+          </h3>
+          <p className={`text-sm mb-6 max-w-sm ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
             Add your first supplier to start tracking purchases.
           </p>
           <Button
@@ -107,7 +119,7 @@ export default function Suppliers() {
               setEditing(null);
               setShowForm(true);
             }}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className={`${darkMode ? 'bg-[#8B7355] hover:bg-[#7A6854]' : 'bg-[#8B7355] hover:bg-[#7A6854]'} text-white`}
           >
             <Plus className="w-4 h-4 mr-2" /> Create First Supplier
           </Button>
@@ -115,49 +127,57 @@ export default function Suppliers() {
       ) : (
         <>
           {/* Desktop Table View - Hidden on mobile */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className={`hidden md:block rounded-xl shadow-sm overflow-hidden ${
+            darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'
+          }`}>
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className={darkMode ? 'bg-neutral-900 border-b border-neutral-700' : 'bg-slate-50 border-b border-slate-200'}>
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Supplier
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Contact
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Notes
                   </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className={`px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider ${
+                    darkMode ? 'text-[#A39180]' : 'text-slate-500'
+                  }`}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className={darkMode ? 'divide-y divide-neutral-700' : 'divide-y divide-slate-200'}>
                 {suppliers.map((supplier) => (
                   <tr
                     key={supplier.supplierId}
-                    className="hover:bg-slate-50 transition-colors"
+                    className={`transition-colors ${darkMode ? 'hover:bg-neutral-700' : 'hover:bg-slate-50'}`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center mr-3">
-                          <Truck className="w-4 h-4 text-amber-600" />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
+                          darkMode ? 'bg-amber-900/20' : 'bg-amber-100'
+                        }`}>
+                          <Truck className={`w-4 h-4 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`} />
                         </div>
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                           {supplier.supplierName}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">
-                        {supplier.supplierContactInfo}
-                      </div>
+                    <td className={`px-4 py-3 whitespace-nowrap text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {supplier.supplierContactInfo}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm text-slate-500">
-                        {supplier.notes || "—"}
-                      </div>
+                    <td className={`px-4 py-3 text-sm ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
+                      {supplier.notes || "—"}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -168,7 +188,10 @@ export default function Suppliers() {
                             setEditing(supplier);
                             setShowForm(true);
                           }}
-                          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                          className={darkMode 
+                            ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' 
+                            : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                          }
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -193,19 +216,23 @@ export default function Suppliers() {
             {suppliers.map((supplier) => (
               <div
                 key={supplier.supplierId}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+                className={`rounded-xl shadow-sm p-4 ${
+                  darkMode ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-slate-200'
+                }`}
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                      <Truck className="w-5 h-5 text-amber-600" />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      darkMode ? 'bg-amber-900/20' : 'bg-amber-100'
+                    }`}>
+                      <Truck className={`w-5 h-5 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`} />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">
+                      <div className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                         {supplier.supplierName}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className={`text-xs ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                         {supplier.supplierContactInfo}
                       </div>
                     </div>
@@ -220,7 +247,11 @@ export default function Suppliers() {
                         setEditing(supplier);
                         setShowForm(true);
                       }}
-                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-8 w-8"
+                      className={`h-8 w-8 ${
+                        darkMode 
+                          ? 'text-[#E8DDD0] hover:text-white hover:bg-[#8B7355]/20' 
+                          : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                      }`}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -237,7 +268,7 @@ export default function Suppliers() {
 
                 {/* Notes */}
                 {supplier.notes && (
-                  <div className="text-sm text-slate-500 mt-2">
+                  <div className={`text-sm mt-2 ${darkMode ? 'text-[#A39180]' : 'text-slate-500'}`}>
                     {supplier.notes}
                   </div>
                 )}
@@ -249,9 +280,13 @@ export default function Suppliers() {
 
       {/* Modal */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={`sm:max-w-md ${
+          darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-white'
+        }`}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className={`text-xl font-semibold ${
+              darkMode ? 'text-white' : 'text-slate-900'
+            }`}>
               {editing ? "Edit Supplier" : "New Supplier"}
             </DialogTitle>
           </DialogHeader>
