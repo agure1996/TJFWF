@@ -226,7 +226,7 @@ export default function Sales(): JSX.Element {
                       darkMode ? "text-[#A39180]" : "text-slate-500"
                     }`}
                   >
-                    Actions
+                    
                   </th>
                 </tr>
               </thead>
